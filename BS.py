@@ -4,17 +4,29 @@ import time
 
 
 class Message:
-    def kill(self):
+    @staticmethod
+    def start():
+        start = {1: "The battle is about to start.",
+                 2: "The battle is commencing.",
+                 3: "Both forces deployed and started advancing towards each other",
+                 4: "After long wait, the order to attack finally came...",
+                 }
+        Message.header("Unknown")
+        Message.wait(start[random.randint(1, len(start))])
+        pass
+
+    @staticmethod
+    def kill():
         pass
 
     @staticmethod
     def malfunction(vehicle, eq_system):
         malfunction = {1: f"Your {vehicle.define_system(eq_system)} has failed to lock on target after launch.",
-                   2: f"{vehicle.define_system(eq_system)} has run out of fuel and auto destructed itself.",
-                   3: f"{vehicle.define_system(eq_system)} missed the target",
-                   4: f"{vehicle.define_system(eq_system)} failed to lit its engine",
-                   5: f"{vehicle.define_system(eq_system)} is heading towards the sun now"
-                   }
+                       2: f"{vehicle.define_system(eq_system)} has run out of fuel and auto destructed itself.",
+                       3: f"{vehicle.define_system(eq_system)} missed the target",
+                       4: f"{vehicle.define_system(eq_system)} failed to lit its engine",
+                       5: f"{vehicle.define_system(eq_system)} is heading towards the sun now"
+                       }
         Message.wait(malfunction[random.randint(1, len(malfunction))])
         pass
 
@@ -30,8 +42,12 @@ class Message:
         Message.wait(death[random.randint(1, len(death))])
         pass
 
-    def header(self):
-        print("Side:   ", self)
+    @staticmethod
+    def header(craft):
+        if isinstance(craft, str):
+            print("Side:   ", craft)
+        else:
+            print("Side:   ", craft.name)
         print("Report:", random.randint(25000, 300000), time.strftime("       %D-%H:%M:%S", time.localtime()))
         print("        Confidental eyes only\n         Classified Document\n   To OPFOR, MoD, AFHC, TLBC, BCTC")
         pass
@@ -90,6 +106,9 @@ class Asset:
             return 3
         elif self.battle == 3:
             return 4
+
+    def attack(self, system, target):
+        pass
 
 
 def welcome():
@@ -242,11 +261,11 @@ def clear():
 
 
 def battle_core(a, side_a, side_b, battle_type, year):
-
+    Message.start()
+    won = False
+    while not won:
+        pass
     pass
-
-
-
 
 
 """
@@ -274,5 +293,5 @@ eq_systems = {
         9: "LR-SAM"}
 }
 
-welcome()
+# welcome()
 oob_main()
