@@ -1,5 +1,5 @@
-import random
 import os
+import random
 import time
 
 
@@ -7,17 +7,19 @@ class Message:
     def kill(self):
         pass
 
-    def malfunction(self, vehicle, eq_system):
-        malfunc = {1: f"Your {vehicle.define_system(eq_system)} has failed to lock on target after launch.",
+    @staticmethod
+    def malfunction(vehicle, eq_system):
+        malfunction = {1: f"Your {vehicle.define_system(eq_system)} has failed to lock on target after launch.",
                    2: f"{vehicle.define_system(eq_system)} has run out of fuel and auto destructed itself.",
                    3: f"{vehicle.define_system(eq_system)} missed the target",
                    4: f"{vehicle.define_system(eq_system)} failed to lit its engine",
                    5: f"{vehicle.define_system(eq_system)} is heading towards the sun now"
                    }
-        Message.wait(self, malfunc[random.randint(1, len(malfunc))])
+        Message.wait(malfunction[random.randint(1, len(malfunction))])
         pass
 
-    def death(self, vehicle):  # Reply with death message of vehicle = Asset object on Message self
+    @staticmethod
+    def death(vehicle):  # Reply with death message of vehicle = Asset object on Message self
         death = {1: f"Your {vehicle.typename.lower()} has been utterly crushed by your foes.",
                  2: f"{vehicle.typename.capitalize()} status: Presumed KIA.",
                  3: f"{vehicle.typename.capitalize()} killed in action.",
@@ -25,7 +27,7 @@ class Message:
                  5: f"{vehicle.typename.capitalize()} couldn't stood against such strong enemy."
                  }
         Message.header(vehicle.side)
-        Message.wait(self, death[random.randint(1, len(death))])
+        Message.wait(death[random.randint(1, len(death))])
         pass
 
     def header(self):
@@ -34,7 +36,8 @@ class Message:
         print("        Confidental eyes only\n         Classified Document\n   To OPFOR, MoD, AFHC, TLBC, BCTC")
         pass
 
-    def wait(self, message, i=3):  # Reply with random dots and message
+    @staticmethod
+    def wait(message, i=3):  # Reply with random dots and message
         dot = "."
         for repeat in range(6):
             print(dot * random.randint(2, 4), end="")
@@ -64,7 +67,7 @@ class Asset:
     def add_system(self, system, amount):
         if amount == 0 and system in self.systems:
             del self.systems[system]
-        elif amount == 0 and not system in self.systems:
+        elif amount == 0 and system not in self.systems or amount == system == "x":
             pass
         else:
             self.systems[system] = amount
@@ -98,7 +101,7 @@ def welcome():
     pass
 
 
-def main():
+def oob_main():
     first = []
     second = []
     battle = oob_battle_type()
@@ -114,10 +117,10 @@ def main():
                 second[i] = Asset("asset{0}_{1}".format(side, i), oob_add_asset(battle, i, side), 3, side, year, battle)
     a = first + second
     for unit in a:
-        oob_equipment(unit)
+        oob_equipment(unit, a)
     oob_final(a)
     input("\n\nBattle will commence after pressing enter.")
-    Message.wait(Message, "", 9)
+    Message.wait("", 9)
     print('Program ends here for now...')
     input()
     battle_core(a, battle, year)
@@ -126,7 +129,7 @@ def main():
 def oob_final(d):
     print("Final Order of Battle:\n======================")
     for unit in d:
-        print(f"Side {unit.side} {unit.typename}, equipped with", end=" ")
+        print(f"Side {unit.side} | {unit.typename}, equipped with", end=" ")
         # for eq_system in unit.systems:
         #     print(f"{unit.systems[eq_system]}, {unit.define_system(eq_system)}", end=", ")
         for thing, amount in unit.systems.items():
@@ -147,24 +150,32 @@ def oob_battle_type():
 
 def oob_year():
     user_choice = 0
-    print("Write what year the battle is in.")
+    print("Write what year the battle is in. (1946 - 2019)")
     while not user_choice:
         user_choice = user_input(1945, 2020)
     clear()
     return user_choice
 
 
-def oob_equipment(unit):
+def oob_equipment(unit, a):
     clear()
     while True:
         print(unit)
         for i in range(len(eq_systems[unit.systemtype])):
             print(i, "=", eq_systems[unit.systemtype][i], end=" | ")
         print("Choose system the vehicle has equipped:\nTo exit equipping mode, select None. "
-              "To remove item, set type normally and amount to 0.")
-        system = user_input(-1, len(eq_systems[unit.systemtype]))
+              "To remove item, set type normally and amount to 0.\nTo duplicate last vehicle done, type "
+              f"{len(eq_systems[unit.systemtype])}")
+        system = user_input(-1, len(eq_systems[unit.systemtype]) + 1)
         if not system:
             return
+        elif system == len(eq_systems[unit.systemtype]):
+            splitter = str(unit.name).split("_")
+            merger = splitter[0] + "_" + str(int(splitter[1]) - 1)
+            for asset in a:
+                if asset.name == merger:
+                    unit.systems = asset.systems
+                    unit.add_system("x", "x")
         else:
             print("Specify how many:")
             amount = user_input(-1)
@@ -229,9 +240,11 @@ def clear():
     clear()
 
 
-def battle_core(assets, battle_type, year):
+def battle_core(a, battle_type, year):
 
     pass
+
+
 
 
 
@@ -261,4 +274,4 @@ eq_systems = {
 }
 
 welcome()
-main()
+oob_main()
