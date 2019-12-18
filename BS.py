@@ -62,8 +62,10 @@ class Asset:
         return str(self.name + "_" + self.typename + " - STATE-" + str(self.state))
 
     def add_system(self, system, amount):
-        if amount == 0:
+        if amount == 0 and system in self.systems:
             del self.systems[system]
+        elif amount == 0 and not system in self.systems:
+            pass
         else:
             self.systems[system] = amount
         clear()
@@ -116,17 +118,21 @@ def main():
     oob_final(a)
     input("\n\nBattle will commence after pressing enter.")
     Message.wait(Message, "", 9)
+    print('Program ends here for now...')
+    input()
     battle_core(a, battle, year)
-
 
 
 def oob_final(d):
     print("Final Order of Battle:\n======================")
     for unit in d:
         print(f"Side {unit.side} {unit.typename}, equipped with", end=" ")
-        for eq_system in unit.systems:
-            print(f"{unit.systems[eq_system]}, {unit.define_system(eq_system)}", end=", ")
+        # for eq_system in unit.systems:
+        #     print(f"{unit.systems[eq_system]}, {unit.define_system(eq_system)}", end=", ")
+        for thing, amount in unit.systems.items():
+            print(eq_systems[unit.systemtype][int(thing)], amount, end=", ")
         print()
+    print()
 
 
 def oob_battle_type():
@@ -199,7 +205,6 @@ def oob_sides():
                 print("How many assets it has?")
                 sides[response] = user_input()
                 break
-    clear()
 
 
 def user_input(minimum=0, maximum=200):
@@ -242,7 +247,8 @@ systems
 
 vehicles = {
     1: {1: "MBT", 2: "AFV", 3: "IFV", 4: "APC", 5: "SAM", 6: "MLB"},
-    2: {1: "Small Multirole", 2: "Medium Multirole", 3: "Large Multirole", 4: "Large Heavy", 5: "Very Large Heavy"},
+    2: {1: "Small Multirole Aircraft", 2: "Medium Multirole Aircraft", 3: "Large Multirole Aircraft",
+        4: "Large Heavy Aircraft", 5: "Very Large Heavy Aircraft"},
     3: {1: "Corvette", 2: "Frigate", 3: "Destroyer", 4: "Cruiser", 5: "Battlecruiser", 6: "Battleship",
         7: "Light Carrier", 8: "Aircraft Carrier"}}
 eq_systems = {
