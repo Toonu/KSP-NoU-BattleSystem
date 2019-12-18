@@ -123,18 +123,19 @@ def oob_main():
     Message.wait("", 9)
     print('Program ends here for now...')
     input()
-    battle_core(a, battle, year)
+    battle_core(a, first, second, battle, year)
 
 
 def oob_final(d):
     print("Final Order of Battle:\n======================")
     for unit in d:
         print(f"Side {unit.side} | {unit.typename}, equipped with", end=" ")
-        # for eq_system in unit.systems:
-        #     print(f"{unit.systems[eq_system]}, {unit.define_system(eq_system)}", end=", ")
-        for thing, amount in unit.systems.items():
-            print(eq_systems[unit.systemtype][int(thing)], amount, end=", ")
-        print()
+        if not unit.systems == {}:
+            for thing, amount in unit.systems.items():
+                print(eq_systems[unit.systemtype][int(thing)], amount, end=", ")
+            print()
+        else:
+            print("its own weapon system only.")
     print()
 
 
@@ -240,7 +241,7 @@ def clear():
     clear()
 
 
-def battle_core(a, battle_type, year):
+def battle_core(a, side_a, side_b, battle_type, year):
 
     pass
 
