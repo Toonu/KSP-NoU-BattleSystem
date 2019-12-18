@@ -1,0 +1,1 @@
+pyinstaller BS.py -F -i IS.ico
