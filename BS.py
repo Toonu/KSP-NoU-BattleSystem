@@ -16,7 +16,33 @@ class Message:
         pass
 
     @staticmethod
-    def kill():
+    def kill(vehicle, battle):
+        if battle == 1:
+            kill = {1: f"“Nailed em! He’s finished.”",
+                    2: f"Lad’s a fireball now.",
+                    3: f"Scratch one!",
+                    }
+        elif battle == 2:
+            kill = {1: f"“Nailed em! He’s finished.”",
+                    2: f"Lad’s a fireball now.",
+                    3: f"Pilot knocked out.",
+                    4: f"Plane burnt down.",
+                    5: f"Engine Died: Fuel Starvation",
+                    6: f"Bandit down, no chute."
+                    }
+        else:
+            kill = {1: f"“Nailed em! He’s finished.”",
+                    2: f"",
+                    3: f"Scratch one!",
+                    }
+        Message.wait(kill[random.randint(1, len(kill))])
+
+    @staticmethod
+    def hit():
+        hit = {1: f"Target hit.",
+               2: f"Target damaged.",
+               }
+        Message.wait(hit[random.randint(1, len(hit))])
         pass
 
     @staticmethod
@@ -25,7 +51,21 @@ class Message:
                        2: f"{vehicle.define_system(eq_system)} has run out of fuel and auto destructed itself.",
                        3: f"{vehicle.define_system(eq_system)} missed the target",
                        4: f"{vehicle.define_system(eq_system)} failed to lit its engine",
-                       5: f"{vehicle.define_system(eq_system)} is heading towards the sun now"
+                       5: f"{vehicle.define_system(eq_system)} failed to connect.",
+                       6: f"{vehicle.define_system(eq_system)} is heading towards the sun now",
+                       7: f"Enemy countermeasures were too much effective.",
+                       8: f"{vehicle.define_system(eq_system)} went and whiffed em’.",
+                       9: f"Failure to decouple."
+                       }
+        Message.wait(malfunction[random.randint(1, len(malfunction))])
+        pass
+
+    @staticmethod
+    def gun_malfunction(vehicle, eq_system):
+        malfunction = {1: f"Contact was too slippery.",
+                       2: f"Must have been poor luck.",
+                       3: f"Shot lost the mark.",
+                       4: f"{vehicle.define_system(eq_system)} failed to connect."
                        }
         Message.wait(malfunction[random.randint(1, len(malfunction))])
         pass
@@ -108,8 +148,13 @@ class Asset:
             return 4
 
     def attack(self, system, target):
-        pass
+        self.systems[system] -= 1
+        target.defense(system)
+        pass  # TODO
 
+    def defense(self, system):
+
+        pass
 
 def welcome():
     version = "Welcome to Battle System Manager v0.5 (ALPHA)"
