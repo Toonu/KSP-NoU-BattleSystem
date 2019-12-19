@@ -110,6 +110,7 @@ class Asset:
         self.type = self.asset_assign(asset_type)
         self.typename = vehicles[asset_type[0]][asset_type[1]]
         self.state = state
+        self.statename = self.define_state()
         self.side = side
         self.year = asset_type[2]
         self.battle = asset_type[0]
@@ -135,10 +136,13 @@ class Asset:
             print(eq_systems[self.systemtype][int(thing)], amount, end=", ")
         print()
 
-    def define_system(self, eq_system):  # Returns system number of eq_system to its name.
-        return eq_systems[self.systemtype][self.systems[eq_system]]
+    def define_system(self, system):  # Returns system name of the obj.
+        return eq_systems[self.systemtype][self.systems[system]]
 
-    def system_type(self):
+    def define_state(self):  # Returns name of the obj state.
+        return state[self.state]
+
+    def system_type(self):  # Assigns system per obj type
         if self.type <= 4 and self.battle == 1:
             return 1
         elif self.type >= 5 and self.battle == 1:
@@ -186,10 +190,10 @@ def oob_main():  # Main Body of assigning assets.
         for i in range(battle_info[0][side]):
             if side == 1:
                 first.append("asset{0}_{1}".format(side, i))
-                first[i] = Asset("asset{0}_{1}".format(side, i), oob_add_asset(i, side, battle_info[1]), 3, side)
+                first[i] = Asset("asset{0}_{1}".format(side, i), oob_add_asset(i, side, battle_info[1]), 5, side)
             else:
                 second.append("asset{0}_{1}".format(side, i))
-                second[i] = Asset("asset{0}_{1}".format(side, i), oob_add_asset(i, side, battle_info[1]), 3, side)
+                second[i] = Asset("asset{0}_{1}".format(side, i), oob_add_asset(i, side, battle_info[1]), 5, side)
     a = first + second
     for unit in a:  # Equips created assets with weapon systems.
         oob_equipment(unit, a)
@@ -198,6 +202,7 @@ def oob_main():  # Main Body of assigning assets.
     Message.wait("", 9)
     print('Program ends here for now...')
     input()
+    print("Or does it?...")
     battle_core(a, first, second)
 
 
@@ -236,8 +241,8 @@ def oob_equipment(unit, a):
 
 def oob_add_asset(number, side, year):  # Specify each asset category, year and its type
     clear()
-    category = user_input(0, 4, "asset{side}_{number}\nWhat category of vehicles you want to add?\n1 | Ground\n2 | "
-                                "Air\n3 | Naval\nInput: ")
+    category = user_input(0, 4, f"asset{side}_{number}\nAsset #{number} of {side} side.\nWhat category of vehicles you "
+                                f"want to add?\n1 | Ground\n2 | Air\n3 | Naval\nInput: ")
     clear()
     print(f"asset{side}_{number}\nAsset #{number} of {side} side.\nType number of asset you want to add to the order "
           f"of battle: ")
@@ -245,8 +250,8 @@ def oob_add_asset(number, side, year):  # Specify each asset category, year and 
         print(i, "=", vehicles[category][i], end=" | ")
     unit_type = user_input(0, len(vehicles[category]) + 1, "\nInput: ")
     clear()
-    print(f"asset{side}_{number}\nWhat year is the vehicle from. (1946 - 2019)\nIn case the vehicle is from {year}, "
-          f"press enter.\nInput: ")
+    print(f"asset{side}_{number}\nAsset #{number} of {side} side.\nWhat year is the vehicle from. (1946 - 2019)\n"
+          f"In case the vehicle is from {year},press enter.\nInput: ")
     new_year = user_input(1945, 2020, "", True)
     if new_year != "":
         year = new_year
@@ -314,7 +319,8 @@ def battle_core(a, side_a, side_b):  # Core of the battle algorithm.
     Message.start()
     won = False
     while not won:
-        pass
+        for a, b in zip(side_a, side_b):
+            a.attack(1, b)
     pass
 
 
@@ -346,6 +352,12 @@ eq_systems = {
     4: {0: "None", 1: "CIWS", 2: "DEW", 3: "ECM", 4: "Smoke", 5: "Chaff", 6: "AShM", 7: "SR-SAM", 8: "MR-SAM",
         9: "LR-SAM"}
 }
+state = {0: "KIA", 1: "Heavily Damaged", 2: "Major Damage taken", 3: "Light Damage", 4: "Scratched", 5: "Normal",
+         6: "RTB", 7: "MIA", 8: "Disappeared"}
 
-welcome()
-oob_main()
+try:
+    welcome()
+    oob_main()
+except Exception as e:
+    print(e)
+    print(type(e))
