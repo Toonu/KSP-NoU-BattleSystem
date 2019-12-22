@@ -85,9 +85,9 @@ class Message:
     @staticmethod
     def header(craft):
         if isinstance(craft, str):
-            print("Side:   ", craft)
+            print("Side:  ", craft)
         else:
-            print("Side:   ", craft.name)
+            print("Side:  ", craft.name)
         print("Report:", random.randint(25000, 300000), time.strftime("       %D-%H:%M:%S", time.localtime()))
         print("        Confidental eyes only\n         Classified Document\n   To OPFOR, MoD, AFHC, TLBC, BCTC")
         pass
@@ -97,23 +97,23 @@ class Message:
         dot = "."
         for repeat in range(6):
             print(dot * random.randint(2, 4), end="")
-            time.sleep(0.5)
+            time.sleep(1)
         print("\n" + dot * i, end="")
-        time.sleep(1)
+        time.sleep(1.5)
         print(str(message))
         pass
 
 
 class Asset:
-    def __init__(self, name, asset_type, state, side):
+    def __init__(self, name, batch, status, side):
         self.name = name
-        self.type = self.asset_assign(asset_type)
-        self.typename = vehicles[asset_type[0]][asset_type[1]]
-        self.state = state
+        self.type = self.asset_assign(batch)
+        self.typename = vehicles[batch[0]][batch[1]]
+        self.state = status
         self.statename = self.define_state
         self.side = side
-        self.year = asset_type[2]
-        self.battle = asset_type[0]
+        self.year = batch[2]
+        self.battle = batch[0]
         self.reliability = self.year / 3000
         self.systemtype = self.system_type()
         self.systems = {}
@@ -166,7 +166,7 @@ class Asset:
 
 
 def welcome():
-    version = "Welcome to Battle System Manager v0.7 (ALPHA)"
+    version = "Welcome to Battle System Manager v0.7.1 (ALPHA)"
     print("=" * len(version), "\n", version, "\n", " " * ((len(version) - 13) // 2), "Made by Toonu\n",
           " " * ((len(version) - 21) // 2), "The Emperor of Iconia\n", " " * (len(version) // 2), "☩\n",
           " " * ((len(version) - 5) // 2), "☩☩☩☩☩\n", " " * (len(version) // 2), "☩\n", "≋" * len(version), "\n",
@@ -197,7 +197,7 @@ def oob_main(year_min="1945", year_max="2020"):  # Main Body of assigning assets
                                   oob_asset_configuration(i, side, battle_info[1], year_min, year_max), 5, side)
     a = first + second
     oob_equipment(a)
-    oob_final(a)  # Finalizes and prints the OOB.
+    oob_final(a, year_min, year_max)  # Finalizes and prints the OOB.
     input("\n\nBattle will commence after pressing enter.")  # Starting next phase and battle functions itself.
     Message.wait("", 9)
     print('Program ends here for now...')
@@ -214,12 +214,12 @@ def oob_equipment(a):  # Equips units with systems.
                 clear()
                 print("Equipment mode:\n")
                 oob_listing(a, name=True)
-                print("\nCurrent edited unit:", unit)
+                print("\nCurrently edited unit:", unit)
                 for i in range(len(eq_systems[unit.systemtype])):
                     print(i, "=", eq_systems[unit.systemtype][i], end=" | ")
                 print(f"\n\nTo move to the next unit, select 0. To remove item, set "
                       f"item type and amount to 0. To finish, press {len(eq_systems[unit.systemtype]) + 1}.\nTo enter "
-                      f"duplication mode, type {len(eq_systems[unit.systemtype])}.\nChoose system the vehicle has equipped:"
+                      f"cloning mode, type {len(eq_systems[unit.systemtype])}.\nChoose system the vehicle has equipped:"
                       , end=" ")
                 system = user_input(-1, len(eq_systems[unit.systemtype]) + 2, "")
                 if int(system) == len(eq_systems[unit.systemtype]) + 1:
@@ -227,27 +227,29 @@ def oob_equipment(a):  # Equips units with systems.
                 elif not int(system):
                     break
                 elif int(system) == len(eq_systems[unit.systemtype]):
-                    oob_duplication(a)
+                    oob_cloning(a)
                 else:
                     amount = user_input(-1, 200, "Specify how many: ")
                     unit.add_system(system, int(amount))
             continue
 
 
-def oob_duplication(a):  # Duplicates equipped system to other units.
+def oob_cloning(a):  # Duplicates equipped system to other units.
     while True:
         clear()
-        print("Duplication mode:\n")
+        print("Cloning mode:\n")
         oob_listing(a, True, True)
-        source = user_input(0, 200, "\nChoose unit from which the items will be duplicated by typing its \"assetx_y\" "
-                                    "name\nEq. asset1_0 | To Exit duplication mode, hit enter twice.\n\nYour input: ",
-                            True)
+        source = user_input(0, 200, "\nChoose unit from which the items will be cloned by typing its number found in"
+                                    "\"assetX_Y\" of the unit.\nEq. type 1_0 for asset1_0 | To Exit duplication mode, "
+                                    "hit enter twice.\n\nYour input: ", True)
+        source = "asset" + source
         clear()
-        print("Duplication mode:\n")
+        print("Cloning mode:\n")
         oob_listing(a, True, True)
         print("\nSource unit:", source, end="\n")
-        target = user_input(0, 200, 'Choose units to duplicate equipment to by typing their name separated by ","\n'
-                                    'Eg. asset1_1,asset2_0.\n\nYour input: ', True)
+        target = user_input(0, 200, 'Choose units to clone equipment to by typing their number separated by ","\n'
+                                    'Eg. 1_1,2_0 for asset1_1 and asset2_0.\n\nYour input: ', True)
+        target = "asset" + target
         for target_unit in target.split(","):
             for source_unit in a:
                 if source_unit.name == source:
@@ -256,9 +258,9 @@ def oob_duplication(a):  # Duplicates equipped system to other units.
                 if unit.name == target_unit:
                     unit.systems = source_systems
         clear()
-        print("Duplication mode:\n")
+        print("Cloning mode:\n")
         oob_listing(a, True, True)
-        exit_mode = user_input(-1, 2, "\nExit duplication mode? (1 YES / 0 NO)\n\nYour input:")
+        exit_mode = user_input(-1, 2, "\nExit cloning mode? (1 YES / 0 NO)\n\nYour input:")
         if exit_mode:
             clear()
             return
@@ -280,6 +282,48 @@ def oob_listing(a, name=False, year=False):
             print()
         else:  # In case no weapons at specific unit.
             print("only its own weapon system.")
+
+
+def oob_year_change(a, year_min, year_max):
+    while True:
+        clear()
+        print("Unit year modification tool:\n")
+        oob_listing(a, year=True, name=True)
+        response = input("\nChoose which asset to edit by typing its number.\nEg. 1_0 for asset1_0.\nTo stop changing "
+                         "years, type 0.\n\nYour input: ")
+        if int(response) == 0:
+            return
+        if isinstance(response, str):
+            new_year = user_input(year_min, year_max, "Choose new year of unit: ")
+            for unit in a:
+                if unit.name == "asset" + response:
+                    unit.year = new_year
+                    unit.reliability = new_year / 3000
+
+
+def oob_asset_type_mod(a, year_min, year_max):
+    while True:
+        clear()
+        print("Unit modification tool:\n")
+        oob_listing(a, name=True, year=True)
+        response = input("\nChoose which asset to edit by typing its number.\nEg. 1_0 for asset1_0.\nTo stop changing "
+                         "assets, type 0.\n\nYour input: ")
+        try:
+            if int(response) == 0:
+                return
+            if isinstance(response, str):
+                for unit in a:
+                    if unit.name == "asset" + response:
+                        unit.systems = {}
+                        batch = oob_asset_configuration(unit.type, unit.side, unit.year, year_min, year_max)
+                        unit.year = batch[2]
+                        unit.reliability = unit.year / 3000
+                        unit.battle = batch[0]
+                        unit.type = unit.asset_assign(batch)
+                        unit.typename = vehicles[batch[0]][batch[1]]
+                        unit.systemtype = unit.system_type()
+        except ValueError:
+            pass
 
 
 def oob_asset_configuration(number, side, year, year_min, year_max):  # Specify each asset category, year and its type
@@ -379,19 +423,29 @@ def clear():  # Clears the terminal
     clear()
 
 
-def oob_final(a):  # Prints units of both sides with their type and year.
-    clear()
-    print("Final Order of Battle:\n")
-    oob_listing(a, False, True)
-    response = user_input(-1, 2, message="\nIs everything in order? (1 YES / 0 NO)")
-    if response:
-        pass
-    else:
-        pass
-        # wrong_system = user_input(0, 4, "What is wrong?\n1 | ")
+def oob_final(a, year_min, year_max):  # Prints units of both sides with their type and year.
+    while True:
+        clear()
+        print("Final Order of Battle:\n")
+        oob_listing(a, False, True)
+        response = user_input(-1, 2, message="\nIs everything in order? (1 YES / 0 NO): ")
+        if not response:
+            wrong_system = user_input(0, 4, "What is wrong?\n1 | Unit composition -- Beware, this will lead to the "
+                                            "restart of the whole program.\n2 | Unit Equipment\n3 | Unit years"
+                                            "\nYour input: ")
+            if wrong_system == 1:
+                oob_asset_type_mod(a, year_min, year_max)
+            elif wrong_system == 2:
+                oob_equipment(a)
+            elif wrong_system == 3:
+                oob_year_change(a, year_min, year_max)
+        else:
+            clear()
+            return
 
 
 def battle_core(a, side_a, side_b):  # Core of the battle algorithm.
+    print("\n\n\n")
     Message.start()
     won = False
     while not won:
