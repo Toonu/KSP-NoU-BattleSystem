@@ -9,7 +9,7 @@ class Message:
         start = {1: "The battle is about to start.",
                  2: "The battle is commencing.",
                  3: "Both forces deployed and started advancing towards each other",
-                 4: "After long wait, the order to attack finally came...",
+                 4: "After long waiting, the order to attack has finally came...",
                  }
         Message.header("Unknown")
         Message.wait(start[random.randint(1, len(start))])
@@ -110,7 +110,7 @@ class Asset:
         self.type = self.asset_assign(asset_type)
         self.typename = vehicles[asset_type[0]][asset_type[1]]
         self.state = state
-        self.statename = self.define_state()
+        self.statename = self.define_state
         self.side = side
         self.year = asset_type[2]
         self.battle = asset_type[0]
@@ -128,13 +128,6 @@ class Asset:
             pass
         else:
             self.systems[system] = amount
-
-    def equipped_systems(self):
-        clear()
-        print("\nSystems Equipped:")
-        for thing, amount in self.systems.items():
-            print(eq_systems[self.systemtype][int(thing)], amount, end=", ")
-        print()
 
     def define_system(self, system):  # Returns system name of the obj.
         return eq_systems[self.systemtype][self.systems[system]]
@@ -164,16 +157,16 @@ class Asset:
 
     def attack(self, system, target):
         self.systems[system] -= 1
-        target.defense(system)
+        target.defense(system, self)
         pass  # TODO
 
-    def defense(self, system):
+    def defense(self, system, attacker):
 
         pass
 
 
 def welcome():
-    version = "Welcome to Battle System Manager v0.6 (ALPHA)"
+    version = "Welcome to Battle System Manager v0.7 (ALPHA)"
     print("=" * len(version), "\n", version, "\n", " " * ((len(version) - 13) // 2), "Made by Toonu\n",
           " " * ((len(version) - 21) // 2), "The Emperor of Iconia\n", " " * (len(version) // 2), "☩\n",
           " " * ((len(version) - 5) // 2), "☩☩☩☩☩\n", " " * (len(version) // 2), "☩\n", "≋" * len(version), "\n",
@@ -181,115 +174,199 @@ def welcome():
     pass
 
 
-def oob_main():  # Main Body of assigning assets.
+def oob_main(year_min="1945", year_max="2020"):  # Main Body of assigning assets.
     first = []
     second = []
-    battle_info = oob_battle_info()
+    battle_info = oob_battle_configuration(year_min, year_max)
+    try:
+        if battle_info[2] is not None:
+            year_min = battle_info[2]
+            year_max = battle_info[3]
+    except IndexError:
+        pass
     print("Stage III: Adding Vehicles\n")
     for side in range(1, 3):  # Creates the assets (vehicles) with numbered names and their specifications.
         for i in range(battle_info[0][side]):
             if side == 1:
                 first.append("asset{0}_{1}".format(side, i))
-                first[i] = Asset("asset{0}_{1}".format(side, i), oob_add_asset(i, side, battle_info[1]), 5, side)
+                first[i] = Asset("asset{0}_{1}".format(side, i),
+                                 oob_asset_configuration(i, side, battle_info[1], year_min, year_max), 5, side)
             else:
                 second.append("asset{0}_{1}".format(side, i))
-                second[i] = Asset("asset{0}_{1}".format(side, i), oob_add_asset(i, side, battle_info[1]), 5, side)
+                second[i] = Asset("asset{0}_{1}".format(side, i),
+                                  oob_asset_configuration(i, side, battle_info[1], year_min, year_max), 5, side)
     a = first + second
-    for unit in a:  # Equips created assets with weapon systems.
-        oob_equipment(unit, a)
+    oob_equipment(a)
     oob_final(a)  # Finalizes and prints the OOB.
     input("\n\nBattle will commence after pressing enter.")  # Starting next phase and battle functions itself.
     Message.wait("", 9)
     print('Program ends here for now...')
     input()
-    print("Or does it?...")
+    print("\n...\n...Or does it?")
     battle_core(a, first, second)
 
 
-def oob_equipment(unit, a):
-    clear()
+def oob_equipment(a):  # Equips units with systems.
+    restart = True
+    while restart:
+        for unit in a:
+            while True:
+                clear()
+                print("Equipment mode:\n")
+                oob_listing(a, name=True)
+                print("\nCurrent edited unit:", unit)
+                for i in range(len(eq_systems[unit.systemtype])):
+                    print(i, "=", eq_systems[unit.systemtype][i], end=" | ")
+                print(f"\n\nTo move to the next unit, select 0. To remove item, set "
+                      f"item type and amount to 0. To finish, press {len(eq_systems[unit.systemtype]) + 1}.\nTo enter "
+                      f"duplication mode, type {len(eq_systems[unit.systemtype])}.\nChoose system the vehicle has equipped:"
+                      , end=" ")
+                system = user_input(-1, len(eq_systems[unit.systemtype]) + 2, "")
+                if int(system) == len(eq_systems[unit.systemtype]) + 1:
+                    return
+                elif not int(system):
+                    break
+                elif int(system) == len(eq_systems[unit.systemtype]):
+                    oob_duplication(a)
+                else:
+                    amount = user_input(-1, 200, "Specify how many: ")
+                    unit.add_system(system, int(amount))
+            continue
+
+
+def oob_duplication(a):  # Duplicates equipped system to other units.
     while True:
-        print(unit)
-        for i in range(len(eq_systems[unit.systemtype])):
-            print(i, "=", eq_systems[unit.systemtype][i], end=" | ")
-        print()
-        system = user_input(-1, len(eq_systems[unit.systemtype]) + 1, f"\nTo exit equipping mode, select None. "
-                                                                      f"To remove item, set system type and amount to "
-                                                                      f"0.\nTo duplicate last vehicle done, type "
-                                                                      f"{len(eq_systems[unit.systemtype])}.\nChoose "
-                                                                      f"system the vehicle has equipped: ")
-        if not system:
+        clear()
+        print("Duplication mode:\n")
+        oob_listing(a, True, True)
+        source = user_input(0, 200, "\nChoose unit from which the items will be duplicated by typing its \"assetx_y\" "
+                                    "name\nEq. asset1_0 | To Exit duplication mode, hit enter twice.\n\nYour input: ",
+                            True)
+        clear()
+        print("Duplication mode:\n")
+        oob_listing(a, True, True)
+        print("\nSource unit:", source, end="\n")
+        target = user_input(0, 200, 'Choose units to duplicate equipment to by typing their name separated by ","\n'
+                                    'Eg. asset1_1,asset2_0.\n\nYour input: ', True)
+        for target_unit in target.split(","):
+            for source_unit in a:
+                if source_unit.name == source:
+                    source_systems = source_unit.systems
+            for unit in a:
+                if unit.name == target_unit:
+                    unit.systems = source_systems
+        clear()
+        print("Duplication mode:\n")
+        oob_listing(a, True, True)
+        exit_mode = user_input(-1, 2, "\nExit duplication mode? (1 YES / 0 NO)\n\nYour input:")
+        if exit_mode:
+            clear()
             return
-        elif system == len(eq_systems[unit.systemtype]):
-            splitter = str(unit.name).split("_")
-            merger = splitter[0] + "_" + str(int(splitter[1]) - 1)
-            for asset in a:
-                while asset.name == merger:
-                    if asset.systemtype == unit.systemtype:
-                        unit.systems = asset.systems
-                        unit.equipped_systems()
-                        break
-                    else:
-                        clear()
-                        print("The vehicles aren't of same type. Cannot duplicate equipment.")
-                        break
+
+
+def oob_listing(a, name=False, year=False):
+    for unit in a:
+        if year and name:
+            print(f"Side {unit.side} | {unit.year} | {unit.name} | {unit.typename} equipped with:", end=" ")
+        elif year:
+            print(f"Side {unit.side} | {unit.year} | {unit.typename} equipped with:", end=" ")
+        elif name:
+            print(f"Side {unit.side} | {unit.name} | {unit.typename} equipped with:", end=" ")
         else:
-            amount = user_input(-1, 200, "Specify how many: ")
-            unit.add_system(system, amount)
-            unit.equipped_systems()
+            print(f"Side {unit.side} | {unit.typename} equipped with:", end=" ")
+        if not unit.systems == {}:
+            for thing, amount in unit.systems.items():
+                print(eq_systems[unit.systemtype][int(thing)], amount, end=", ")
+            print()
+        else:  # In case no weapons at specific unit.
+            print("only its own weapon system.")
 
 
-def oob_add_asset(number, side, year):  # Specify each asset category, year and its type
+def oob_asset_configuration(number, side, year, year_min, year_max):  # Specify each asset category, year and its type
     clear()
-    category = user_input(0, 4, f"asset{side}_{number}\nAsset #{number} of {side} side.\nWhat category of vehicles you "
-                                f"want to add?\n1 | Ground\n2 | Air\n3 | Naval\nInput: ")
+    category = user_input(0, 4, f"Asset configuration mode:\n\nasset{side}_{number}\nAsset #{number + 1} of {side} "
+                                f"side.\nWhat category of vehicles you want to add?\n1 | Ground\n2 | Air\n3 | Naval\n"
+                                f"Input: ", clean=True)
     clear()
-    print(f"asset{side}_{number}\nAsset #{number} of {side} side.\nType number of asset you want to add to the order "
-          f"of battle: ")
+    print(f"Asset configuration mode:\n\nasset{side}_{number}\nAsset #{number + 1} of {side} side.\nType number of "
+          f"asset you want to add to the order of battle: ")
     for i in range(1, len(vehicles[category]) + 1):  # Prints out all unit types of unit category.
         print(i, "=", vehicles[category][i], end=" | ")
     unit_type = user_input(0, len(vehicles[category]) + 1, "\nInput: ")
     clear()
-    print(f"asset{side}_{number}\nAsset #{number} of {side} side.\nWhat year is the vehicle from. (1946 - 2019)\n"
-          f"In case the vehicle is from {year},press enter.\nInput: ")
-    new_year = user_input(1945, 2020, "", True)
-    if new_year != "":
-        year = new_year
-    return category, unit_type, int(year)
-
-
-def oob_battle_info():  # Specify how many units each side have and let the user change the values.
-    sides = {}
-    print("Stage I: Assigning year of battle.")
-    year = user_input(1945, 2020, "Specify year: ")
-    print("Stage II: Assigning vehicles to their respective sides.")
-    for side in range(1, 3):
-        sides[side] = user_input(0, 200, f"Specify how many assets side {side} has: ")
     while True:
+        print(f"Asset configuration mode:\n\nasset{side}_{number}\nAsset #{number + 1} of {side} side.\nWhat year is "
+              f"the vehicle from. ({year_min} - {year_max})\nIn case the vehicle is from {year}, press enter.\nInput: ")
+        new_year = user_input(year_min, year_max, "", True)  # Assigns new non-default year for the unit.
+        if new_year != "":
+            try:  # Handle non-int inputs while the user_input handles min and max values.
+                year = int(new_year)
+            except ValueError:
+                clear()
+                print("Your input is invalid!")
+                continue
+        return category, unit_type, int(year)
+
+
+def oob_battle_configuration(year_min, year_max):
+    # Specify how many units each side have and let the user change the values.
+    sides = {}
+    year_has_changed = False
+    while True:
+        print("Battle configuration mode:\n\nStage I: Assigning year of battle.")
+        # Assign new min max year if "YYYY-YYYY" is in input or assign default battle year.
+        year = user_input(year_min, year_max, f"Specify year ({year_min} - {year_max}): ", True)
+        try:
+            if isinstance(year, str) and year[4] == "-":  # Changing min max years to new values. If not, except.
+                year_min = int(year[0:4])
+                year_max = int(year[5:9])
+                year = None
+                year_has_changed = True
+                continue
+        except IndexError:  # If not changing basic years, sets default battle year.
+            try:
+                year = int(year)
+            except ValueError:
+                print("Your input isn't a number. Please retry.")
+                continue
         clear()
-        print(f"Side 1:", sides[1], "units\nSide 2:", sides[2], "units")
-        response = user_input(-1, 2, "Are the numbers right? (1 Yes/0 = No)\nInput: ")
-        if response == 1:
-            return sides, year
-        elif not response:
-            while True:
-                response = user_input(0, 3, "What side is wrong? (1/2)")
-                sides[response] = user_input(0, 200, "How many assets it has?")
-                break
+        print("Battle configuration mode:\n\nStage II: Assigning vehicles to their respective sides.")
+        for side in range(1, 3):
+            sides[side] = user_input(0, 200, f"Specify how many assets side {side} has: ")
+        while True:  # Repeated changeable part of code. Can change units per side and returns the results.
+            clear()
+            print(f"Battle configuration mode:\n\nSide 1: {sides[1]} units\nSide 2: {sides[2]} units\nYear: {year}")
+            response = user_input(-1, 2, "\nAre the numbers right? (1 YES / 0 NO)\nInput: ")
+            if response == 1 and year_has_changed and year is not None:
+                return sides, year, year_min, year_max
+            elif response == 1 and year is not None:
+                return sides, year
+            elif not response:
+                while True:
+                    response = user_input(0, 3, "What side is wrong? (1/2)")
+                    sides[response] = user_input(0, 200, "How many assets it has?")
+                    break
 
 
-def user_input(minimum=0, maximum=200, message="", test=False):  # Limited number user input.
+def user_input(minimum=0, maximum=200, message="", test=False, clean=False):  # Limited number user input.
     while True:
         user_choice = input(message)
         try:
-            if user_choice == "" and test:
+            if test and minimum < int(user_choice) < maximum:
                 return user_choice
-            if type(user_choice) == str and minimum < int(user_choice) < maximum:
+            elif isinstance(user_choice, str) and minimum < int(user_choice) < maximum:
                 return int(user_choice)
             else:
+                if clean:
+                    clear()
                 print("Your input is out of specified range!\nPlease retry: ")
         except ValueError:
-            print("Your input isn't a number!\nPlease retry: ")
+            if test:
+                return user_choice
+            else:
+                if clean:
+                    clear()
+                print("Your input isn't a number!\nPlease retry: ")
             continue
 
 
@@ -302,17 +379,16 @@ def clear():  # Clears the terminal
     clear()
 
 
-def oob_final(d):  # Prints units of both sides with their type and year.
-    print("Final Order of Battle:\n======================")
-    for unit in d:
-        print(f"Side {unit.side} | {unit.year} | {unit.typename}, equipped with", end=" ")
-        if not unit.systems == {}:
-            for thing, amount in unit.systems.items():
-                print(eq_systems[unit.systemtype][int(thing)], amount, end=", ")
-            print()
-        else:  # In case no weapons at specific unit.
-            print("only its own weapon system.")
-    print()
+def oob_final(a):  # Prints units of both sides with their type and year.
+    clear()
+    print("Final Order of Battle:\n")
+    oob_listing(a, False, True)
+    response = user_input(-1, 2, message="\nIs everything in order? (1 YES / 0 NO)")
+    if response:
+        pass
+    else:
+        pass
+        # wrong_system = user_input(0, 4, "What is wrong?\n1 | ")
 
 
 def battle_core(a, side_a, side_b):  # Core of the battle algorithm.
@@ -352,12 +428,14 @@ eq_systems = {
     4: {0: "None", 1: "CIWS", 2: "DEW", 3: "ECM", 4: "Smoke", 5: "Chaff", 6: "AShM", 7: "SR-SAM", 8: "MR-SAM",
         9: "LR-SAM"}
 }
-state = {0: "KIA", 1: "Heavily Damaged", 2: "Major Damage taken", 3: "Light Damage", 4: "Scratched", 5: "Normal",
+state = {0: "KIA", 1: "Heavily Damaged", 2: "Major Damage taken", 3: "Light Damage", 4: "Scratched", 5: "State Nominal",
          6: "RTB", 7: "MIA", 8: "Disappeared"}
 
 try:
     welcome()
-    oob_main()
+    oob_main(1945, 2020)
 except Exception as e:
-    print(e)
-    print(type(e))
+    print(f"Program crashed with this error: {e}, {type(e)}, \nPlease report the error to the developers.\n"
+          "Re-launching program now.\n\n")
+    welcome()
+    oob_main(1945, 2020)
