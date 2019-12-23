@@ -146,13 +146,13 @@ class Asset:
             return 4
 
     @staticmethod
-    def asset_assign(asset_type):
+    def asset_assign(asset_type):  # Assign internal type of the unit
         if asset_type[0] == 1:
             result = asset_type[1]
         if asset_type[0] == 2:
-            result = asset_type[1] + len(vehicles[asset_type[0]])
+            result = asset_type[1] + len(vehicles[asset_type[0]]) + 1
         elif asset_type[0] == 3:
-            result = asset_type[1] + len(vehicles[asset_type[0] - 1]) + len(vehicles[asset_type[0]])
+            result = asset_type[1] + len(vehicles[asset_type[0]]) + len(vehicles[asset_type[1]]) + 2
         return result
 
     def attack(self, system, target):
@@ -166,44 +166,88 @@ class Asset:
 
 
 def welcome():
-    version = "Welcome to Battle System Manager v0.7.1 (ALPHA)"
+    version = "Welcome to Battle System Manager v0.7.2 (ALPHA)"
     print("=" * len(version), "\n", version, "\n", " " * ((len(version) - 13) // 2), "Made by Toonu\n",
           " " * ((len(version) - 21) // 2), "The Emperor of Iconia\n", " " * (len(version) // 2), "☩\n",
           " " * ((len(version) - 5) // 2), "☩☩☩☩☩\n", " " * (len(version) // 2), "☩\n", "≋" * len(version), "\n",
           sep="")
-    pass
 
 
-def oob_main(year_min="1945", year_max="2020"):  # Main Body of assigning assets.
+def oob_main(years=[1975, 2020]):  # Main Body of assigning assets.
     first = []
     second = []
-    battle_info = oob_battle_configuration(year_min, year_max)
-    try:
-        if battle_info[2] is not None:
-            year_min = battle_info[2]
-            year_max = battle_info[3]
-    except IndexError:
-        pass
+    battle_info = oob_battle_configuration(years)
+    if battle_info[2] is not None:
+        years = battle_info[2]
     print("Stage III: Adding Vehicles\n")
     for side in range(1, 3):  # Creates the assets (vehicles) with numbered names and their specifications.
         for i in range(battle_info[0][side]):
             if side == 1:
                 first.append("asset{0}_{1}".format(side, i))
                 first[i] = Asset("asset{0}_{1}".format(side, i),
-                                 oob_asset_configuration(i, side, battle_info[1], year_min, year_max), 5, side)
+                                 oob_asset_configuration(i, side, battle_info[1], years), 5, side)
             else:
                 second.append("asset{0}_{1}".format(side, i))
                 second[i] = Asset("asset{0}_{1}".format(side, i),
-                                  oob_asset_configuration(i, side, battle_info[1], year_min, year_max), 5, side)
+                                  oob_asset_configuration(i, side, battle_info[1], years), 5, side)
     a = first + second
     oob_equipment(a)
-    oob_final(a, year_min, year_max)  # Finalizes and prints the OOB.
+    oob_final(a, years)  # Finalizes and prints the OOB.
+    clear()
     input("\n\nBattle will commence after pressing enter.")  # Starting next phase and battle functions itself.
     Message.wait("", 9)
     print('Program ends here for now...')
     input()
     print("\n...\n...Or does it?")
     battle_core(a, first, second)
+
+
+def oob_battle_configuration(years):  # Specify how many each side has and default year.
+    sides = {}
+    while True:
+        print("Battle configuration mode:\n\nStage I: Assigning year of battle.")
+        year = user_input(years[0], years[1], f"Specify year ({years[0]} - {years[1]}): ", string=True,
+                          check="[0-9]{4}-[0-9]{4}")  # Assigns new years when input is XXXX-YYYY.
+        if isinstance(year, str) and year[4] == "-":  # Changing min max years to new values. If not, except.
+            years = [int(year[0:4]), int(year[5:9])]
+            continue
+
+        clear()  # Specify units per side.
+        print("Battle configuration mode:\n\nStage II: Assigning vehicles to their respective sides.")
+        for side in range(1, 3):
+            sides[side] = user_input(minimum=1, msg=f"Specify how many assets side {side} has: ")
+
+        while True:  # Allows change of units per side.
+            clear()
+            print(f"Battle configuration mode:\n\nSide 1: {sides[1]} units\nSide 2: {sides[2]} units\nYear: {year}")
+            response = user_input(0, 1, "\nAre the numbers right? (1 YES / 0 NO)\nInput: ")
+            if response == 1 and year is not None:
+                return sides, year, years
+            while not response:
+                response = user_input(1, 2, "What side is wrong? (1/2)")
+                sides[response] = user_input(msg="How many assets this side has?")
+
+
+def oob_asset_configuration(number, side, year, years):  # Specify each asset category, year and its type
+    clear()  # Chooses unit category.
+    category = user_input(1, 3, f"Asset configuration mode:\n\nasset{side}_{number}\nAsset #{number + 1} of {side} "
+                                f"side.\nWhat category of vehicles you want to add?\n1 | Ground\n2 | Air\n3 | Naval\n"
+                                f"Input: ")
+    clear()  # Chooses unit type.
+    print(f"Asset configuration mode:\n\nasset{side}_{number}\nAsset #{number + 1} of {side} side.\nType number of "
+          f"asset you want to add to the order of battle: ")
+    for i in range(1, len(vehicles[category]) + 1):  # Prints out all unit types of unit category.
+        print(i, "=", vehicles[category][i], end=" | ")
+    unit_type = user_input(0, len(vehicles[category]), "\nInput: ")
+
+    clear()  # Chooses unit year.
+    while True:
+        print(f"Asset configuration mode:\n\nasset{side}_{number}\nAsset #{number + 1} of {side} side.\nWhat year is "
+              f"the vehicle from. ({years[0]} - {years[1]})\nIn case the vehicle is from {year}, press enter.\nInput: ")
+        new_year = user_input(years[0], years[1], "", enter=True)  # Assigns new non-default year for the unit.
+        if new_year is not None and new_year != "":
+            year = new_year
+        return category, unit_type, year
 
 
 def oob_equipment(a):  # Equips units with systems.
@@ -221,7 +265,7 @@ def oob_equipment(a):  # Equips units with systems.
                       f"item type and amount to 0. To finish, press {len(eq_systems[unit.systemtype]) + 1}.\nTo enter "
                       f"cloning mode, type {len(eq_systems[unit.systemtype])}.\nChoose system the vehicle has equipped:"
                       , end=" ")
-                system = user_input(-1, len(eq_systems[unit.systemtype]) + 2, "")
+                system = user_input(0, len(eq_systems[unit.systemtype]) + 1)
                 if int(system) == len(eq_systems[unit.systemtype]) + 1:
                     return
                 elif not int(system):
@@ -229,7 +273,7 @@ def oob_equipment(a):  # Equips units with systems.
                 elif int(system) == len(eq_systems[unit.systemtype]):
                     oob_cloning(a)
                 else:
-                    amount = user_input(-1, 200, "Specify how many: ")
+                    amount = user_input(msg="Specify how many: ")
                     unit.add_system(system, int(amount))
             continue
 
@@ -239,28 +283,27 @@ def oob_cloning(a):  # Duplicates equipped system to other units.
         clear()
         print("Cloning mode:\n")
         oob_listing(a, True, True)
-        source = user_input(0, 200, "\nChoose unit from which the items will be cloned by typing its number found in"
-                                    "\"assetX_Y\" of the unit.\nEq. type 1_0 for asset1_0 | To Exit duplication mode, "
-                                    "hit enter twice.\n\nYour input: ", True)
+        source = user_input(msg="\nChoose unit from which the items will be cloned by typing its number found in"
+                                "\"assetX_Y\" of the unit.\nEq. 1_0 for asset1_0 | To Exit duplication mode, "
+                                "hit enter twice.\n\nYour input: ", string=True, check="^[0-9]+_[0-9]+")
         source = "asset" + source
         clear()
         print("Cloning mode:\n")
         oob_listing(a, True, True)
         print("\nSource unit:", source, end="\n")
-        target = user_input(0, 200, 'Choose units to clone equipment to by typing their number separated by ","\n'
-                                    'Eg. 1_1,2_0 for asset1_1 and asset2_0.\n\nYour input: ', True)
-        target = "asset" + target
+        target = user_input(msg='Choose units to clone equipment to by typing their number separated by ","\nEg. 1_1,'
+                                '2_0 for asset1_1 and asset2_0.\n\nYour input: ', string=True, check="([0-9]+_[0-9]+)+")
         for target_unit in target.split(","):
             for source_unit in a:
                 if source_unit.name == source:
                     source_systems = source_unit.systems
             for unit in a:
-                if unit.name == target_unit:
+                if unit.name == "asset" + target_unit:
                     unit.systems = source_systems
         clear()
         print("Cloning mode:\n")
         oob_listing(a, True, True)
-        exit_mode = user_input(-1, 2, "\nExit cloning mode? (1 YES / 0 NO)\n\nYour input:")
+        exit_mode = user_input(0, 1, "\nExit cloning mode? (1 YES / 0 NO)\n\nYour input:")
         if exit_mode:
             clear()
             return
@@ -284,134 +327,62 @@ def oob_listing(a, name=False, year=False):
             print("only its own weapon system.")
 
 
-def oob_year_change(a, year_min, year_max):
+def oob_final(a, years):  # Prints units of both sides with their type and year.
     while True:
         clear()
-        print("Unit year modification tool:\n")
-        oob_listing(a, year=True, name=True)
-        response = input("\nChoose which asset to edit by typing its number.\nEg. 1_0 for asset1_0.\nTo stop changing "
-                         "years, type 0.\n\nYour input: ")
-        if int(response) == 0:
+        print("Final Order of Battle:\n")
+        oob_listing(a, False, True)
+        response = user_input(0, 1, "\nIs everything correct in order? (1 YES / 0 NO): ")
+        if not response:
+            wrong_system = user_input(1, 3, "What is wrong?\n1 | Unit composition\n2 | Unit Equipment\n3 | Unit years"
+                                            "\nYour input: ")
+            if wrong_system == 1:
+                oob_asset_type_mod(a, years)
+            elif wrong_system == 2:
+                oob_equipment(a)
+            elif wrong_system == 3:
+                oob_mod_year(a, years)
+        else:
             return
-        if isinstance(response, str):
-            new_year = user_input(year_min, year_max, "Choose new year of unit: ")
-            for unit in a:
-                if unit.name == "asset" + response:
-                    unit.year = new_year
-                    unit.reliability = new_year / 3000
 
 
-def oob_asset_type_mod(a, year_min, year_max):
+def oob_asset_type_mod(a, years):
     while True:
         clear()
         print("Unit modification tool:\n")
         oob_listing(a, name=True, year=True)
-        response = input("\nChoose which asset to edit by typing its number.\nEg. 1_0 for asset1_0.\nTo stop changing "
-                         "assets, type 0.\n\nYour input: ")
-        try:
-            if int(response) == 0:
-                return
-            if isinstance(response, str):
-                for unit in a:
-                    if unit.name == "asset" + response:
-                        unit.systems = {}
-                        batch = oob_asset_configuration(unit.type, unit.side, unit.year, year_min, year_max)
-                        unit.year = batch[2]
-                        unit.reliability = unit.year / 3000
-                        unit.battle = batch[0]
-                        unit.type = unit.asset_assign(batch)
-                        unit.typename = vehicles[batch[0]][batch[1]]
-                        unit.systemtype = unit.system_type()
-        except ValueError:
-            pass
+        response = user_input(msg="\nChoose which asset to edit by typing its number.\nEg. 1_0 for asset1_0.\nTo stop "
+                                  "changing assets, type 0.\n\nYour input: ", string=True, check="^[0-9]+_[0-9]+")
+        if not response:
+            return
+        else:
+            for unit in a:
+                if not isinstance(response, int) and unit.name == "asset" + response:
+                    unit.systems = {}
+                    batch = oob_asset_configuration(unit.type, unit.side, unit.year, years)
+                    unit.year = batch[2]
+                    unit.reliability = unit.year / 3000
+                    unit.battle = batch[0]
+                    unit.type = unit.asset_assign(batch)
+                    unit.typename = vehicles[batch[0]][batch[1]]
+                    unit.systemtype = unit.system_type()
 
 
-def oob_asset_configuration(number, side, year, year_min, year_max):  # Specify each asset category, year and its type
-    clear()
-    category = user_input(0, 4, f"Asset configuration mode:\n\nasset{side}_{number}\nAsset #{number + 1} of {side} "
-                                f"side.\nWhat category of vehicles you want to add?\n1 | Ground\n2 | Air\n3 | Naval\n"
-                                f"Input: ", clean=True)
-    clear()
-    print(f"Asset configuration mode:\n\nasset{side}_{number}\nAsset #{number + 1} of {side} side.\nType number of "
-          f"asset you want to add to the order of battle: ")
-    for i in range(1, len(vehicles[category]) + 1):  # Prints out all unit types of unit category.
-        print(i, "=", vehicles[category][i], end=" | ")
-    unit_type = user_input(0, len(vehicles[category]) + 1, "\nInput: ")
-    clear()
+def oob_mod_year(a, years):
     while True:
-        print(f"Asset configuration mode:\n\nasset{side}_{number}\nAsset #{number + 1} of {side} side.\nWhat year is "
-              f"the vehicle from. ({year_min} - {year_max})\nIn case the vehicle is from {year}, press enter.\nInput: ")
-        new_year = user_input(year_min, year_max, "", True)  # Assigns new non-default year for the unit.
-        if new_year != "":
-            try:  # Handle non-int inputs while the user_input handles min and max values.
-                year = int(new_year)
-            except ValueError:
-                clear()
-                print("Your input is invalid!")
-                continue
-        return category, unit_type, int(year)
-
-
-def oob_battle_configuration(year_min, year_max):
-    # Specify how many units each side have and let the user change the values.
-    sides = {}
-    year_has_changed = False
-    while True:
-        print("Battle configuration mode:\n\nStage I: Assigning year of battle.")
-        # Assign new min max year if "YYYY-YYYY" is in input or assign default battle year.
-        year = user_input(year_min, year_max, f"Specify year ({year_min} - {year_max}): ", True)
-        try:
-            if isinstance(year, str) and year[4] == "-":  # Changing min max years to new values. If not, except.
-                year_min = int(year[0:4])
-                year_max = int(year[5:9])
-                year = None
-                year_has_changed = True
-                continue
-        except IndexError:  # If not changing basic years, sets default battle year.
-            try:
-                year = int(year)
-            except ValueError:
-                print("Your input isn't a number. Please retry.")
-                continue
         clear()
-        print("Battle configuration mode:\n\nStage II: Assigning vehicles to their respective sides.")
-        for side in range(1, 3):
-            sides[side] = user_input(0, 200, f"Specify how many assets side {side} has: ")
-        while True:  # Repeated changeable part of code. Can change units per side and returns the results.
-            clear()
-            print(f"Battle configuration mode:\n\nSide 1: {sides[1]} units\nSide 2: {sides[2]} units\nYear: {year}")
-            response = user_input(-1, 2, "\nAre the numbers right? (1 YES / 0 NO)\nInput: ")
-            if response == 1 and year_has_changed and year is not None:
-                return sides, year, year_min, year_max
-            elif response == 1 and year is not None:
-                return sides, year
-            elif not response:
-                while True:
-                    response = user_input(0, 3, "What side is wrong? (1/2)")
-                    sides[response] = user_input(0, 200, "How many assets it has?")
-                    break
-
-
-def user_input(minimum=0, maximum=200, message="", test=False, clean=False):  # Limited number user input.
-    while True:
-        user_choice = input(message)
-        try:
-            if test and minimum < int(user_choice) < maximum:
-                return user_choice
-            elif isinstance(user_choice, str) and minimum < int(user_choice) < maximum:
-                return int(user_choice)
-            else:
-                if clean:
-                    clear()
-                print("Your input is out of specified range!\nPlease retry: ")
-        except ValueError:
-            if test:
-                return user_choice
-            else:
-                if clean:
-                    clear()
-                print("Your input isn't a number!\nPlease retry: ")
-            continue
+        print("Year of unit editing:\n")
+        oob_listing(a, year=True, name=True)
+        response = user_input("\nChoose which asset to edit by typing its number.\nEg. 1_0 for asset1_0.\nTo stop "
+                              "changing years, type 0.\n\nYour input: ", string=True, check="^[0-9]+_[0-9]+")
+        if not response:
+            return
+        else:
+            new_year = user_input(years[0], years[1], f"Choose new year of unit ({years[0]} - {years[1]}): ")
+            for unit in a:
+                if not isinstance(response, int) and unit.name == "asset" + response:
+                    unit.year = new_year
+                    unit.reliability = new_year / 3000
 
 
 def clear():  # Clears the terminal
@@ -423,25 +394,21 @@ def clear():  # Clears the terminal
     clear()
 
 
-def oob_final(a, year_min, year_max):  # Prints units of both sides with their type and year.
+def user_input(minimum=0, maximum=100, msg="", enter=False, string=False, check=""):
+    from re import match
     while True:
-        clear()
-        print("Final Order of Battle:\n")
-        oob_listing(a, False, True)
-        response = user_input(-1, 2, message="\nIs everything in order? (1 YES / 0 NO): ")
-        if not response:
-            wrong_system = user_input(0, 4, "What is wrong?\n1 | Unit composition -- Beware, this will lead to the "
-                                            "restart of the whole program.\n2 | Unit Equipment\n3 | Unit years"
-                                            "\nYour input: ")
-            if wrong_system == 1:
-                oob_asset_type_mod(a, year_min, year_max)
-            elif wrong_system == 2:
-                oob_equipment(a)
-            elif wrong_system == 3:
-                oob_year_change(a, year_min, year_max)
-        else:
-            clear()
-            return
+        value = input(msg)
+        try:
+            if string and match(check, value) is not None:
+                return value
+            elif minimum <= int(value) <= maximum:
+                return int(value)
+            else:
+                print("Invalid input! Number out of range! Please retry.")
+        except ValueError:
+            if enter and value == "":
+                return value
+            print("Invalid input! Please retry.")
 
 
 def battle_core(a, side_a, side_b):  # Core of the battle algorithm.
@@ -485,11 +452,14 @@ eq_systems = {
 state = {0: "KIA", 1: "Heavily Damaged", 2: "Major Damage taken", 3: "Light Damage", 4: "Scratched", 5: "State Nominal",
          6: "RTB", 7: "MIA", 8: "Disappeared"}
 
-try:
+welcome()
+oob_main()
+
+"""try:
     welcome()
     oob_main(1945, 2020)
 except Exception as e:
     print(f"Program crashed with this error: {e}, {type(e)}, \nPlease report the error to the developers.\n"
           "Re-launching program now.\n\n")
     welcome()
-    oob_main(1945, 2020)
+    oob_main(1945, 2020)"""
