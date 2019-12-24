@@ -107,15 +107,15 @@ class Message:
 class Asset:
     def __init__(self, name, batch, status, side):
         self.name = name
-        self.type = self.asset_assign(batch)
-        self.typename = vehicles[batch[0]][batch[1]]
+        self.type = self.asset_assign(batch)  # Internal asset type
+        self.typename = vehicles[batch[0]][batch[1]]  # Asset name Eg. MBT
         self.state = status
         self.statename = self.define_state
         self.side = side
         self.year = batch[2]
         self.battle = batch[0]
         self.reliability = self.year / 3000
-        self.systemtype = self.system_type()
+        self.systemtype = self.system_type()  # Systemtype is used to handle special weapon categories.
         self.systems = {}
 
     def __str__(self):
@@ -150,9 +150,9 @@ class Asset:
         if asset_type[0] == 1:
             result = asset_type[1]
         if asset_type[0] == 2:
-            result = asset_type[1] + len(vehicles[asset_type[0]]) + 1
+            result = asset_type[1] + len(vehicles[1])
         elif asset_type[0] == 3:
-            result = asset_type[1] + len(vehicles[asset_type[0]]) + len(vehicles[asset_type[1]]) + 2
+            result = asset_type[1] + len(vehicles[1]) + len(vehicles[2])
         return result
 
     def attack(self, system, target):
@@ -225,7 +225,7 @@ def oob_battle_configuration(years):  # Specify how many each side has and defau
                 return sides, year, years
             while not response:
                 response = user_input(1, 2, "What side is wrong? (1/2)")
-                sides[response] = user_input(msg="How many assets this side has?")
+                sides[response] = user_input(minimum=1, msg="How many assets this side has?")
 
 
 def oob_asset_configuration(number, side, year, years):  # Specify each asset category, year and its type
@@ -416,8 +416,16 @@ def battle_core(a, side_a, side_b):  # Core of the battle algorithm.
     Message.start()
     won = False
     while not won:
-        for a, b in zip(side_a, side_b):
-            a.attack(1, b)
+
+        # Air battle first
+
+        for a in side_a:
+            if 6 < a.type < 12:
+                for b in side_b:
+                    if 6 < a.type < 12:
+                        for weapon in a.systems:
+                            if weapon == 7:  # Long range attack
+                                a.attack(weapon, b)
     pass
 
 
@@ -452,14 +460,11 @@ eq_systems = {
 state = {0: "KIA", 1: "Heavily Damaged", 2: "Major Damage taken", 3: "Light Damage", 4: "Scratched", 5: "State Nominal",
          6: "RTB", 7: "MIA", 8: "Disappeared"}
 
-welcome()
-oob_main()
-
-"""try:
+try:
     welcome()
-    oob_main(1945, 2020)
+    oob_main()
 except Exception as e:
-    print(f"Program crashed with this error: {e}, {type(e)}, \nPlease report the error to the developers.\n"
+    print(f"Program crashed with this error: {e}, {type(e)}, {e.args}, \nPlease report the error to the developers.\n"
           "Re-launching program now.\n\n")
     welcome()
-    oob_main(1945, 2020)"""
+    oob_main()
