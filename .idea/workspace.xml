@@ -225,22 +225,26 @@
     <option name="REARRANGE_BEFORE_PROJECT_COMMIT" value="true" />
   </component>
   <component name="WindowStateProjectService">
-    <state width="1345" height="166" key="GridCell.Tab.0.bottom" timestamp="1577388224662">
+    <state x="328" y="23" key="CommitChangelistDialog2" timestamp="1577390806698">
       <screen x="0" y="23" width="1366" height="681" />
     </state>
-    <state width="1345" height="166" key="GridCell.Tab.0.bottom/0.23.1366.681@0.23.1366.681" timestamp="1577388224662" />
-    <state width="1345" height="166" key="GridCell.Tab.0.center" timestamp="1577388224659">
+    <state x="328" y="23" key="CommitChangelistDialog2/0.23.1366.681@0.23.1366.681" timestamp="1577390806698" />
+    <state width="1345" height="166" key="GridCell.Tab.0.bottom" timestamp="1577390895089">
       <screen x="0" y="23" width="1366" height="681" />
     </state>
-    <state width="1345" height="166" key="GridCell.Tab.0.center/0.23.1366.681@0.23.1366.681" timestamp="1577388224659" />
-    <state width="1345" height="166" key="GridCell.Tab.0.left" timestamp="1577388224659">
+    <state width="1345" height="166" key="GridCell.Tab.0.bottom/0.23.1366.681@0.23.1366.681" timestamp="1577390895089" />
+    <state width="1345" height="166" key="GridCell.Tab.0.center" timestamp="1577390895087">
       <screen x="0" y="23" width="1366" height="681" />
     </state>
-    <state width="1345" height="166" key="GridCell.Tab.0.left/0.23.1366.681@0.23.1366.681" timestamp="1577388224659" />
-    <state width="1345" height="166" key="GridCell.Tab.0.right" timestamp="1577388224660">
+    <state width="1345" height="166" key="GridCell.Tab.0.center/0.23.1366.681@0.23.1366.681" timestamp="1577390895087" />
+    <state width="1345" height="166" key="GridCell.Tab.0.left" timestamp="1577390895086">
       <screen x="0" y="23" width="1366" height="681" />
     </state>
-    <state width="1345" height="166" key="GridCell.Tab.0.right/0.23.1366.681@0.23.1366.681" timestamp="1577388224660" />
+    <state width="1345" height="166" key="GridCell.Tab.0.left/0.23.1366.681@0.23.1366.681" timestamp="1577390895086" />
+    <state width="1345" height="166" key="GridCell.Tab.0.right" timestamp="1577390895088">
+      <screen x="0" y="23" width="1366" height="681" />
+    </state>
+    <state width="1345" height="166" key="GridCell.Tab.0.right/0.23.1366.681@0.23.1366.681" timestamp="1577390895088" />
     <state width="1345" height="207" key="GridCell.Tab.1.bottom" timestamp="1577385617182">
       <screen x="0" y="23" width="1366" height="681" />
     </state>
@@ -261,6 +265,10 @@
       <screen x="0" y="23" width="1366" height="681" />
     </state>
     <state x="192" y="23" key="SettingsEditor/0.23.1366.681@0.23.1366.681" timestamp="1577219349130" />
+    <state x="283" y="103" key="Vcs.Push.Dialog.v2" timestamp="1577390809234">
+      <screen x="0" y="23" width="1366" height="681" />
+    </state>
+    <state x="283" y="103" key="Vcs.Push.Dialog.v2/0.23.1366.681@0.23.1366.681" timestamp="1577390809234" />
     <state x="376" y="196" key="com.intellij.ide.util.TipDialog" timestamp="1577216412112">
       <screen x="0" y="23" width="1366" height="681" />
     </state>
