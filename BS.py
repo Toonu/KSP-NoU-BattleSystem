@@ -93,15 +93,26 @@ class Message:
         pass
 
     @staticmethod
-    def wait(message, i=3):  # Reply with random dots and message
-        dot = "."
-        for repeat in range(6):
-            print(dot * random.randint(2, 4), end="")
-            time.sleep(1)
-        print("\n" + dot * i, end="")
-        time.sleep(1.5)
+    def wait(message, i=3, dots=True, dot=True):  # Reply with random dots and message
+        if dots:
+            symbol = "."
+            for repeat in range(6):
+                print(symbol * random.randint(2, 4), end="")
+                time.sleep(1)
+            if dot:
+                print("\n" + symbol * i, end="")
+            time.sleep(1.5)
         print(str(message))
-        pass
+
+    @staticmethod
+    def fire(system, vehicle, source):
+        if source.systemtype in (1, 2):
+            fire = {1: f"{system} was fired at {vehicle} from your {source.typename}"}
+        elif source.systemtype == 3:
+            fire = {1: f"{system} was fired at {vehicle} from your {source.typename}"}
+        elif source.systemtype == 4:
+            fire = {1: f"{system} was fired at {vehicle} from your {source.typename}"}
+        Message.wait(fire[random.randint(1, len(fire))], dots=False)
 
 
 class Asset:
@@ -109,13 +120,12 @@ class Asset:
         self.name = name
         self.type = self.asset_assign(batch)  # Internal asset type
         self.typename = vehicles[batch[0]][batch[1]]  # Asset name Eg. MBT
-        self.state = status
-        self.statename = self.define_state
-        self.side = side
-        self.year = batch[2]
-        self.battle = batch[0]
-        self.reliability = self.year / 3000
-        self.systemtype = self.system_type()  # Systemtype is used to handle special weapon categories.
+        self.systemtype = self.system_type()  # 1 ground 2 radar 3 air 4 sam
+        self.state = status  # How much alive asset is
+        self.statename = self.define_state  # How much alive asset is in normal name
+        self.side = side  # Fighting side
+        self.year = batch[2]  # Year of origin
+        self.reliability = self.year / 3000  # Reliability of its WS
         self.systems = {}
 
     def __str__(self):
@@ -136,13 +146,13 @@ class Asset:
         return state[self.state]
 
     def system_type(self):  # Assigns system per obj type
-        if self.type <= 4 and self.battle == 1:
+        if self.type <= 4 or self.type == 6:
             return 1
-        elif self.type >= 5 and self.battle == 1:
+        elif self.type == 5:
             return 2
-        elif self.battle == 2:
+        elif 7 <= self.type <= 11:
             return 3
-        elif self.battle == 3:
+        elif 12 <= self.type:
             return 4
 
     @staticmethod
@@ -155,18 +165,123 @@ class Asset:
             result = asset_type[1] + len(vehicles[1]) + len(vehicles[2])
         return result
 
-    def attack(self, system, target):
+    def attack(self, system, target, source):
+        if not target:
+            print(f"{system} has no target to attack.")
+            return
+        Message.fire(system_name(self.systemtype, system), target.typename, source)
         self.systems[system] -= 1
+        if self.systems[system] == 0:
+            self.systems.pop(system)
         target.defense(system, self)
         pass  # TODO
 
     def defense(self, system, attacker):
-
+        print(f"{system} attacked by {attacker}")
         pass
 
 
+def battle_core(side_both, side_a, side_b):  # Core of the battle algorithm.
+    print("\n\n\n")
+    Message.start()
+    won = False
+    distance = 11
+    while not won:
+        distance -= 1
+        battle_airland_battle(side_a, side_b, distance)
+
+
+def battle_airland_battle(side_a, side_b, distance):
+    for a in side_a:  # Air battle first
+        distance = 0
+        if a.systemtype == 3:
+            for weapon in a.systems:
+                if weapon == 5 and distance > 2:  # SRAAM on short distance
+                    battle_target_acquisition(side_b, a, weapon)
+                elif weapon == 6 and distance > 4:  # MRAAM on medium range
+                    battle_target_acquisition(side_b, a, weapon)
+                elif weapon == 7:  # LRAAM on long range
+                    battle_target_acquisition(side_b, a, weapon)
+                elif distance > 8:  # guns on short distance
+                    battle_target_acquisition(side_b, a, 99)
+                a.distance -= 1
+                return
+
+
+def battle_target_acquisition(side_b, unit, weapon):  # Picks primary target depending on the vehicle type.
+    maximum = 0
+    target = False
+    acquisition = battle_weapon_type(unit, weapon)
+
+    for b in side_b:
+        if b.systemtype == acquisition and b.type > maximum:
+            maximum = b.type
+            target = b
+
+    unit.attack(target, unit, weapon)
+
+
+def battle_weapon_type(unit, weapon):  # Returns type of weapon target - 1 veh, 2 radar, 3 air, 4 sea
+    if unit.systemtype == 1:  # Ground units attacking ground units
+        return 1
+    elif unit.systemtype == 2:  # MLB units against ship 4 and air 3
+        if weapon == 7:
+            return 4
+        return 3
+    elif unit.systemtype == 3:  # Planes against 1 vehicles, 4 ships, 2 radars and 3 air
+        if weapon in (8, 11, 12, 13):
+            return 1
+        elif weapon == 9:
+            return 4
+        elif weapon == 10:
+            return 2
+        return 3
+    elif unit.systemtype == 4:  # Ships against 3 air, 1 ground, 4 ships
+        if weapon in (7, 8, 9):
+            return 3
+        elif weapon == 10:
+            return 1
+        return 4
+
+
+def system_name(vehicle, system):
+    return eq_systems[vehicle][system]
+
+
+"""
+vehicles
+1 - Ground battle, 2 - Air battle, 3 - naval battle
+systems
+1 - tank, afv, ifv, apc
+2 - sam, mlb
+3 - air
+4 - naval
+"""
+
+vehicles = {
+    1: {1: "MBT", 2: "AFV", 3: "IFV", 4: "APC", 5: "SAM", 6: "MLB"},
+    2: {1: "Small Multirole Aircraft", 2: "Medium Multirole Aircraft", 3: "Large Multirole Aircraft",
+        4: "Large Heavy Aircraft", 5: "Very Large Heavy Aircraft"},
+    3: {1: "Corvette", 2: "Frigate", 3: "Destroyer", 4: "Cruiser", 5: "Battlecruiser", 6: "Battleship",
+        7: "Light Carrier", 8: "Aircraft Carrier"}}
+vehicles_internal = {1: "MBT", 2: "AFV", 3: "IFV", 4: "APC", 5: "SAM", 6: "MLB", 7: "Small Multirole Aircraft",
+                     8: "Medium Multirole Aircraft", 9: "Large Multirole Aircraft", 10: "Large Heavy Aircraft",
+                     11: "Very Large Heavy Aircraft", 12: "Corvette", 13: "Frigate", 14: "Destroyer", 15: "Cruiser",
+                     16: "Battlecruiser", 17: "Battleship", 18: "Light Carrier", 19: "Aircraft Carrier"}
+eq_systems = {
+    1: {0: "None", 1: "Smoke", 2: "HK-APS", 3: "SK-APS", 4: "ATGM"},
+    2: {0: "None", 1: "Smoke", 2: "HK-APS", 3: "SK-APS", 4: "SR-SAM", 5: "MR-SAM", 6: "LR-SAM", 7: "AShM"},
+    3: {0: "None", 1: "Flares", 2: "Chaff", 3: "ECM", 4: "EWS", 5: "SRAAM", 6: "MRAAM", 7: "LRAAM", 8: "AGM", 9: "AShM",
+        10: "SEAD", 11: "Cruise Missile", 12: "Bomb", 13: "GBU"},
+    4: {0: "None", 1: "CIWS", 2: "DEW", 3: "ECM", 4: "Smoke", 5: "Chaff", 6: "AShM", 7: "SR-SAM", 8: "MR-SAM",
+        9: "LR-SAM", 10: "Cruise Missile"}
+}
+state = {0: "KIA", 1: "Heavily Damaged", 2: "Major Damage taken", 3: "Light Damage", 4: "Scratched", 5: "State Nominal",
+         6: "RTB", 7: "MIA", 8: "Disappeared"}
+
+
 def welcome():
-    version = "Welcome to Battle System Manager v0.7.2 (ALPHA)"
+    version = "Welcome to Battle System Manager v0.7.4 (ALPHA)"
     print("=" * len(version), "\n", version, "\n", " " * ((len(version) - 13) // 2), "Made by Toonu\n",
           " " * ((len(version) - 21) // 2), "The Emperor of Iconia\n", " " * (len(version) // 2), "☩\n",
           " " * ((len(version) - 5) // 2), "☩☩☩☩☩\n", " " * (len(version) // 2), "☩\n", "≋" * len(version), "\n",
@@ -194,11 +309,7 @@ def oob_main(years=[1975, 2020]):  # Main Body of assigning assets.
     oob_equipment(a)
     oob_final(a, years)  # Finalizes and prints the OOB.
     clear()
-    input("\n\nBattle will commence after pressing enter.")  # Starting next phase and battle functions itself.
     Message.wait("", 9)
-    print('Program ends here for now...')
-    input()
-    print("\n...\n...Or does it?")
     battle_core(a, first, second)
 
 
@@ -285,7 +396,10 @@ def oob_cloning(a):  # Duplicates equipped system to other units.
         oob_listing(a, True, True)
         source = user_input(msg="\nChoose unit from which the items will be cloned by typing its number found in"
                                 "\"assetX_Y\" of the unit.\nEq. 1_0 for asset1_0 | To Exit duplication mode, "
-                                "hit enter twice.\n\nYour input: ", string=True, check="^[0-9]+_[0-9]+")
+                                "hit enter.\n\nYour input: ", string=True, check="^[0-9]+_[0-9]+", enter=True)
+        if source == "":
+            clear()
+            return
         source = "asset" + source
         clear()
         print("Cloning mode:\n")
@@ -299,7 +413,7 @@ def oob_cloning(a):  # Duplicates equipped system to other units.
                     source_systems = source_unit.systems
             for unit in a:
                 if unit.name == "asset" + target_unit:
-                    unit.systems = source_systems
+                    unit.systems = source_systems.copy()
         clear()
         print("Cloning mode:\n")
         oob_listing(a, True, True)
@@ -332,7 +446,7 @@ def oob_final(a, years):  # Prints units of both sides with their type and year.
         clear()
         print("Final Order of Battle:\n")
         oob_listing(a, False, True)
-        response = user_input(0, 1, "\nIs everything correct in order? (1 YES / 0 NO): ")
+        response = user_input(0, 1, "\nIs everything correct? (1 YES / 0 NO): \nBattle will commence if yes: ")
         if not response:
             wrong_system = user_input(1, 3, "What is wrong?\n1 | Unit composition\n2 | Unit Equipment\n3 | Unit years"
                                             "\nYour input: ")
@@ -362,7 +476,6 @@ def oob_asset_type_mod(a, years):
                     batch = oob_asset_configuration(unit.type, unit.side, unit.year, years)
                     unit.year = batch[2]
                     unit.reliability = unit.year / 3000
-                    unit.battle = batch[0]
                     unit.type = unit.asset_assign(batch)
                     unit.typename = vehicles[batch[0]][batch[1]]
                     unit.systemtype = unit.system_type()
@@ -373,8 +486,9 @@ def oob_mod_year(a, years):
         clear()
         print("Year of unit editing:\n")
         oob_listing(a, year=True, name=True)
-        response = user_input("\nChoose which asset to edit by typing its number.\nEg. 1_0 for asset1_0.\nTo stop "
-                              "changing years, type 0.\n\nYour input: ", string=True, check="^[0-9]+_[0-9]+")
+        response = user_input(msg="\nChoose which asset to edit by typing its number.\nEg. 1_0 for asset1_0.\nTo stop "
+                                  "changing years, type 0.\n\nYour input: ", minimum=0, maximum=0, string=True,
+                              check="^[0-9]+_[0-9]+")
         if not response:
             return
         else:
@@ -411,60 +525,19 @@ def user_input(minimum=0, maximum=100, msg="", enter=False, string=False, check=
             print("Invalid input! Please retry.")
 
 
-def battle_core(a, side_a, side_b):  # Core of the battle algorithm.
-    print("\n\n\n")
-    Message.start()
-    won = False
-    while not won:
-
-        # Air battle first
-
-        for a in side_a:
-            if 6 < a.type < 12:
-                for b in side_b:
-                    if 6 < a.type < 12:
-                        for weapon in a.systems:
-                            if weapon == 7:  # Long range attack
-                                a.attack(weapon, b)
-    pass
+def start(bugs=False):
+    if bugs:
+        try:
+            welcome()
+            oob_main()
+        except Exception as e:
+            print(f"Program crashed with this error: {e}, {type(e)}, {e.args}, \nPlease report the error to the "
+                  f"developers.\nRe-launching program now.\n\n")
+            welcome()
+            oob_main()
+    else:
+        welcome()
+        oob_main()
 
 
-"""
-vehicles
-1 - Ground battle, 2 - Air battle, 3 - naval battle
-systems
-1 - tank, afv, ifv, apc
-2 - sam, mlb
-3 - air
-4 - naval
-"""
-
-vehicles = {
-    1: {1: "MBT", 2: "AFV", 3: "IFV", 4: "APC", 5: "SAM", 6: "MLB"},
-    2: {1: "Small Multirole Aircraft", 2: "Medium Multirole Aircraft", 3: "Large Multirole Aircraft",
-        4: "Large Heavy Aircraft", 5: "Very Large Heavy Aircraft"},
-    3: {1: "Corvette", 2: "Frigate", 3: "Destroyer", 4: "Cruiser", 5: "Battlecruiser", 6: "Battleship",
-        7: "Light Carrier", 8: "Aircraft Carrier"}}
-vehicles_internal = {1: "MBT", 2: "AFV", 3: "IFV", 4: "APC", 5: "SAM", 6: "MLB", 7: "Small Multirole Aircraft",
-                     8: "Medium Multirole Aircraft", 9: "Large Multirole Aircraft", 10: "Large Heavy Aircraft",
-                     11: "Very Large Heavy Aircraft", 12: "Corvette", 13: "Frigate", 14: "Destroyer", 15: "Cruiser",
-                     16: "Battlecruiser", 17: "Battleship", 18: "Light Carrier", 19: "Aircraft Carrier"}
-eq_systems = {
-    1: {0: "None", 1: "Smoke", 2: "HK-APS", 3: "SK-APS", 4: "ATGM"},
-    2: {0: "None", 1: "Smoke", 2: "HK-APS", 3: "SK-APS", 4: "SR-SAM", 5: "MR-SAM", 6: "LR-SAM"},
-    3: {0: "None", 1: "Flares", 2: "Chaff", 3: "ECM", 4: "EWS", 5: "SRAAM", 6: "MRAAM", 7: "LRAAM", 8: "AGM", 9: "AShM",
-        10: "SEAD", 11: "Cruise Missile", 12: "Bomb", 13: "GBU"},
-    4: {0: "None", 1: "CIWS", 2: "DEW", 3: "ECM", 4: "Smoke", 5: "Chaff", 6: "AShM", 7: "SR-SAM", 8: "MR-SAM",
-        9: "LR-SAM"}
-}
-state = {0: "KIA", 1: "Heavily Damaged", 2: "Major Damage taken", 3: "Light Damage", 4: "Scratched", 5: "State Nominal",
-         6: "RTB", 7: "MIA", 8: "Disappeared"}
-
-try:
-    welcome()
-    oob_main()
-except Exception as e:
-    print(f"Program crashed with this error: {e}, {type(e)}, {e.args}, \nPlease report the error to the developers.\n"
-          "Re-launching program now.\n\n")
-    welcome()
-    oob_main()
+start()
