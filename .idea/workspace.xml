@@ -2,10 +2,11 @@
 <project version="4">
   <component name="ChangeListManager">
     <list default="true" id="47b19ab7-b610-4490-9b15-db8ef449b338" name="Default Changelist" comment="">
-      <change beforePath="$PROJECT_DIR$/.idea/KSP-NoU.iml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/KSP-NoU.iml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/inspectionProfiles/profiles_settings.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/inspectionProfiles/profiles_settings.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/BS.py" beforeDir="false" afterPath="$PROJECT_DIR$/BS.py" afterDir="false" />
     </list>
+    <option name="EXCLUDED_CONVERTED_TO_IGNORED" value="true" />
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
     <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
@@ -16,18 +17,24 @@
     <option name="ROOT_SYNC" value="DONT_SYNC" />
   </component>
   <component name="ProjectId" id="1VAVwRuU2Mo6fULdU9s4xFHg0ua" />
-  <component name="ProjectViewState">
-    <option name="hideEmptyMiddlePackages" value="true" />
-    <option name="showExcludedFiles" value="true" />
-    <option name="showLibraryContents" value="true" />
-  </component>
   <component name="PropertiesComponent">
     <property name="ASKED_SHARE_PROJECT_CONFIGURATION_FILES" value="true" />
-    <property name="RunOnceActivity.ShowReadmeOnStart" value="true" />
     <property name="SHARE_PROJECT_CONFIGURATION_FILES" value="true" />
-    <property name="last_opened_file_path" value="$PROJECT_DIR$" />
+    <property name="last_opened_file_path" value="C:/Program Files/Git/bin/git.exe" />
     <property name="restartRequiresConfirmation" value="false" />
-    <property name="settings.editor.selected.configurable" value="com.jetbrains.python.configuration.PyActiveSdkModuleConfigurable" />
+    <property name="settings.editor.selected.configurable" value="Errors" />
+  </component>
+  <component name="RunDashboard">
+    <option name="ruleStates">
+      <list>
+        <RuleState>
+          <option name="name" value="ConfigurationTypeDashboardGroupingRule" />
+        </RuleState>
+        <RuleState>
+          <option name="name" value="StatusDashboardGroupingRule" />
+        </RuleState>
+      </list>
+    </option>
   </component>
   <component name="RunManager" selected="Python.BS">
     <configuration name="BS" type="PythonConfigurationType" factoryName="Python" temporary="true">
@@ -82,18 +89,6 @@
         <item itemvalue="Python.BS.pyw" />
       </list>
     </recent_temporary>
-  </component>
-  <component name="ServiceViewManager">
-    <option name="viewStates">
-      <list>
-        <serviceView>
-          <treeState>
-            <expand />
-            <select />
-          </treeState>
-        </serviceView>
-      </list>
-    </option>
   </component>
   <component name="SvnConfiguration">
     <configuration />
@@ -223,55 +218,5 @@
     <option name="OPTIMIZE_IMPORTS_BEFORE_PROJECT_COMMIT" value="true" />
     <option name="REFORMAT_BEFORE_PROJECT_COMMIT" value="true" />
     <option name="REARRANGE_BEFORE_PROJECT_COMMIT" value="true" />
-  </component>
-  <component name="WindowStateProjectService">
-    <state x="328" y="23" key="CommitChangelistDialog2" timestamp="1577390806698">
-      <screen x="0" y="23" width="1366" height="681" />
-    </state>
-    <state x="328" y="23" key="CommitChangelistDialog2/0.23.1366.681@0.23.1366.681" timestamp="1577390806698" />
-    <state width="1345" height="166" key="GridCell.Tab.0.bottom" timestamp="1577390895089">
-      <screen x="0" y="23" width="1366" height="681" />
-    </state>
-    <state width="1345" height="166" key="GridCell.Tab.0.bottom/0.23.1366.681@0.23.1366.681" timestamp="1577390895089" />
-    <state width="1345" height="166" key="GridCell.Tab.0.center" timestamp="1577390895087">
-      <screen x="0" y="23" width="1366" height="681" />
-    </state>
-    <state width="1345" height="166" key="GridCell.Tab.0.center/0.23.1366.681@0.23.1366.681" timestamp="1577390895087" />
-    <state width="1345" height="166" key="GridCell.Tab.0.left" timestamp="1577390895086">
-      <screen x="0" y="23" width="1366" height="681" />
-    </state>
-    <state width="1345" height="166" key="GridCell.Tab.0.left/0.23.1366.681@0.23.1366.681" timestamp="1577390895086" />
-    <state width="1345" height="166" key="GridCell.Tab.0.right" timestamp="1577390895088">
-      <screen x="0" y="23" width="1366" height="681" />
-    </state>
-    <state width="1345" height="166" key="GridCell.Tab.0.right/0.23.1366.681@0.23.1366.681" timestamp="1577390895088" />
-    <state width="1345" height="207" key="GridCell.Tab.1.bottom" timestamp="1577385617182">
-      <screen x="0" y="23" width="1366" height="681" />
-    </state>
-    <state width="1345" height="207" key="GridCell.Tab.1.bottom/0.23.1366.681@0.23.1366.681" timestamp="1577385617182" />
-    <state width="1345" height="207" key="GridCell.Tab.1.center" timestamp="1577385617182">
-      <screen x="0" y="23" width="1366" height="681" />
-    </state>
-    <state width="1345" height="207" key="GridCell.Tab.1.center/0.23.1366.681@0.23.1366.681" timestamp="1577385617182" />
-    <state width="1345" height="207" key="GridCell.Tab.1.left" timestamp="1577385617181">
-      <screen x="0" y="23" width="1366" height="681" />
-    </state>
-    <state width="1345" height="207" key="GridCell.Tab.1.left/0.23.1366.681@0.23.1366.681" timestamp="1577385617181" />
-    <state width="1345" height="207" key="GridCell.Tab.1.right" timestamp="1577385617182">
-      <screen x="0" y="23" width="1366" height="681" />
-    </state>
-    <state width="1345" height="207" key="GridCell.Tab.1.right/0.23.1366.681@0.23.1366.681" timestamp="1577385617182" />
-    <state x="192" y="23" key="SettingsEditor" timestamp="1577219349130">
-      <screen x="0" y="23" width="1366" height="681" />
-    </state>
-    <state x="192" y="23" key="SettingsEditor/0.23.1366.681@0.23.1366.681" timestamp="1577219349130" />
-    <state x="283" y="103" key="Vcs.Push.Dialog.v2" timestamp="1577390809234">
-      <screen x="0" y="23" width="1366" height="681" />
-    </state>
-    <state x="283" y="103" key="Vcs.Push.Dialog.v2/0.23.1366.681@0.23.1366.681" timestamp="1577390809234" />
-    <state x="376" y="196" key="com.intellij.ide.util.TipDialog" timestamp="1577216412112">
-      <screen x="0" y="23" width="1366" height="681" />
-    </state>
-    <state x="376" y="196" key="com.intellij.ide.util.TipDialog/0.23.1366.681@0.23.1366.681" timestamp="1577216412112" />
   </component>
 </project>

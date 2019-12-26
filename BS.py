@@ -4,96 +4,89 @@ import time
 
 
 class Message:
-    @staticmethod
-    def start():
-        start = {1: "The battle is about to start.",
-                 2: "The battle is commencing.",
-                 3: "Both forces deployed and started advancing towards each other",
-                 4: "After long waiting, the order to attack has finally came...",
-                 }
-        Message.header("Unknown")
-        Message.wait(start[random.randint(1, len(start))])
-        pass
+    """
+    Message is printing messages
+    """
 
     @staticmethod
-    def kill(vehicle, battle):
-        if battle == 1:
-            kill = {1: f"“Nailed em! He’s finished.”",
-                    2: f"Lad’s a fireball now.",
-                    3: f"Scratch one!",
-                    }
-        elif battle == 2:
-            kill = {1: f"“Nailed em! He’s finished.”",
-                    2: f"Lad’s a fireball now.",
-                    3: f"Pilot knocked out.",
-                    4: f"Plane burnt down.",
-                    5: f"Engine Died: Fuel Starvation",
-                    6: f"Bandit down, no chute."
-                    }
-        else:
-            kill = {1: f"“Nailed em! He’s finished.”",
-                    2: f"",
-                    3: f"Scratch one!",
-                    }
-        Message.wait(kill[random.randint(1, len(kill))])
+    def message(msg_type, vehicle, system=1, headline="", dot=True, dots=True, repeat=0, header=True, wait=True):
+        """
+        Prints various random messages from the message dict.
+        :param headline: Header subject message.
+        :param wait: Disable wait message.
+        :param msg_type: Type of message from the dict.
+        :param vehicle: Vehicle obj affected.
+        :param header: Disable header message.
+        :param system: Vehicle obj weapon system.
+        :param dot: Triple dots in wait message.
+        :param dots: Dots in wait message.
+        :param repeat: How many triple dots are repeated in wait message.
+
+         #  0 | Battle start, 1 | Death, 2 | Gun malfunc, 3 | Missile failure, 4 | Hit, 5 |
+        """
+        messages = {0: ["The battle is about to start.", "The battle is commencing.",
+                        "Both forces deployed and started advancing towards each other",
+                        "After long waiting, the order to attack has finally came..."],
+                    1: [f"Your {vehicle.typename.lower()} has been utterly crushed by your foes.",
+                        f"{vehicle.typename.capitalize()} status: Presumed KIA.",
+                        f"{vehicle.typename.capitalize()} killed in action.",
+                        f"{vehicle.typename.capitalize()} disappeared from your battle control screen.",
+                        f"{vehicle.typename.capitalize()} couldn't stood against such strong enemy."],
+                    2: [f"Contact was too slippery.", f"Must have been poor luck.", f"Shot lost the mark.",
+                        f"{vehicle.define_system(system)} failed to connect."],
+                    3: [f"Your {vehicle.define_system(system)} has failed to lock on target after launch.",
+                        f"{vehicle.define_system(system)} has run out of fuel and auto destructed itself.",
+                        f"{vehicle.define_system(system)} missed the target",
+                        f"{vehicle.define_system(system)} failed to lit its engine",
+                        f"{vehicle.define_system(system)} failed to connect.",
+                        f"{vehicle.define_system(system)} is heading towards the sun now",
+                        f"Enemy countermeasures were too much effective.",
+                        f"{vehicle.define_system(system)} went and whiffed em’.",
+                        f"Failure to decouple."],
+                    4: ["Target hit.", "Target damaged."]}
+        if header:
+            Message.header(header)
+        if wait:
+            Message.wait(messages[msg_type][random.randint(1, len(messages[msg_type]))], i=repeat, dot=dot, dots=dots)
+        if not header and wait:
+            Message.wait(messages[msg_type][random.randint(1, len(messages[msg_type]))], i=0, dot=False, dots=False)
 
     @staticmethod
-    def hit():
-        hit = {1: f"Target hit.",
-               2: f"Target damaged.",
-               }
-        Message.wait(hit[random.randint(1, len(hit))])
-        pass
-
-    @staticmethod
-    def malfunction(vehicle, eq_system):
-        malfunction = {1: f"Your {vehicle.define_system(eq_system)} has failed to lock on target after launch.",
-                       2: f"{vehicle.define_system(eq_system)} has run out of fuel and auto destructed itself.",
-                       3: f"{vehicle.define_system(eq_system)} missed the target",
-                       4: f"{vehicle.define_system(eq_system)} failed to lit its engine",
-                       5: f"{vehicle.define_system(eq_system)} failed to connect.",
-                       6: f"{vehicle.define_system(eq_system)} is heading towards the sun now",
-                       7: f"Enemy countermeasures were too much effective.",
-                       8: f"{vehicle.define_system(eq_system)} went and whiffed em’.",
-                       9: f"Failure to decouple."
-                       }
-        Message.wait(malfunction[random.randint(1, len(malfunction))])
-        pass
-
-    @staticmethod
-    def gun_malfunction(vehicle, eq_system):
-        malfunction = {1: f"Contact was too slippery.",
-                       2: f"Must have been poor luck.",
-                       3: f"Shot lost the mark.",
-                       4: f"{vehicle.define_system(eq_system)} failed to connect."
-                       }
-        Message.wait(malfunction[random.randint(1, len(malfunction))])
-        pass
-
-    @staticmethod
-    def death(vehicle):  # Reply with death message of vehicle = Asset object on Message self
-        death = {1: f"Your {vehicle.typename.lower()} has been utterly crushed by your foes.",
-                 2: f"{vehicle.typename.capitalize()} status: Presumed KIA.",
-                 3: f"{vehicle.typename.capitalize()} killed in action.",
-                 4: f"{vehicle.typename.capitalize()} disappeared from your battle control screen.",
-                 5: f"{vehicle.typename.capitalize()} couldn't stood against such strong enemy."
-                 }
-        Message.header(vehicle.side)
-        Message.wait(death[random.randint(1, len(death))])
-        pass
+    def kill(unit_type):
+        """
+        Prints killing message.
+        :param unit_type: Unit type that was killed.
+        """
+        kill = {1: [f"“Nailed em! He’s finished.”", f"Lad’s a fireball now.", f"Scratch one!",
+                    f"Target crew bailed out", f"Our shot penetrated the enemy and destroyed everything inside."],
+                2: [f"“Nailed em! He’s finished.”", f"Lad’s a fireball now.", f"Pilot knocked out.",
+                    f"Plane burnt down.", f"Engine Died: Fuel Starvation", f"Bandit down, no chute."],
+                3: [f"“Nailed em! He’s finished.”", f"Enemy is sinking.", f"Scratch one!",
+                    f"Enemy has huge hole in his hull", f"Target is taking water and abandoning the ship was ordered."]}
+        Message.wait(kill[unit_type][random.randint(1, len(kill))])
 
     @staticmethod
     def header(craft):
+        """
+        Prints header message.
+        :param craft: Headline of header message.
+        """
         if isinstance(craft, str):
             print("Side:  ", craft)
         else:
             print("Side:  ", craft.name)
         print("Report:", random.randint(25000, 300000), time.strftime("       %D-%H:%M:%S", time.localtime()))
         print("        Confidental eyes only\n         Classified Document\n   To OPFOR, MoD, AFHC, TLBC, BCTC")
-        pass
 
     @staticmethod
-    def wait(message, i=3, dots=True, dot=True):  # Reply with random dots and message
+    def wait(message, i=3, dots=True, dot=True):
+        """
+        Reply with random dots and message
+        :param message: Message to be printed after dots.
+        :param i: How many triple-dots are printed before the main message.
+        :param dots: If random dots are printed before the triple dots.
+        :param dot: If the triple dots are printed.
+        """
         if dots:
             symbol = "."
             for repeat in range(6):
@@ -106,6 +99,12 @@ class Message:
 
     @staticmethod
     def fire(system, vehicle, source):
+        """
+        Printing firing messages depending on the variables.
+        :param system: Weapon system fired.
+        :param vehicle: Vehicle which was fired upon.
+        :param source: Vehicle which fired.
+        """
         if source.systemtype in (1, 2):
             fire = {1: f"{system} was fired at {vehicle} from your {source.typename}"}
         elif source.systemtype == 3:
@@ -116,13 +115,17 @@ class Message:
 
 
 class Asset:
+    """
+    Asset objects are the units itself.
+    """
+
     def __init__(self, name, batch, status, side):
         self.name = name
         self.type = self.asset_assign(batch)  # Internal asset type
         self.typename = vehicles[batch[0]][batch[1]]  # Asset name Eg. MBT
-        self.systemtype = self.system_type()  # 1 ground 2 radar 3 air 4 sam
+        self.systemtype = self.system_type()  # 1 ground 2 radar 3 air 4 sea
         self.state = status  # How much alive asset is
-        self.statename = self.define_state  # How much alive asset is in normal name
+        self.statename = state[self.state]  # How much alive asset is in normal name
         self.side = side  # Fighting side
         self.year = batch[2]  # Year of origin
         self.reliability = self.year / 3000  # Reliability of its WS
@@ -131,7 +134,12 @@ class Asset:
     def __str__(self):
         return str(self.name + "_" + self.typename + " - STATE-" + str(self.state))
 
-    def add_system(self, system, amount):  # Adds equipment to the systems dict of object.
+    def add_system(self, system, amount):
+        """
+        Adds equipment to the systems dict of object.
+        :param system: System to be added.
+        :param amount: How much of them should be added.
+        """
         if amount == 0 and system in self.systems:
             del self.systems[system]
         elif amount == 0 and system not in self.systems:
@@ -139,13 +147,19 @@ class Asset:
         else:
             self.systems[system] = amount
 
-    def define_system(self, system):  # Returns system name of the obj.
+    def define_system(self, system):
+        """
+        Defines system str name.
+        :param system:  System int defining system name string.
+        :return:        Returns str of the obj name.
+        """
         return eq_systems[self.systemtype][self.systems[system]]
 
-    def define_state(self):  # Returns name of the obj state.
-        return state[self.state]
-
-    def system_type(self):  # Assigns system per obj type
+    def system_type(self):
+        """
+        Assigns system per obj type
+        :return: Returns obj system type which sets weapons it can equip.
+        """
         if self.type <= 4 or self.type == 6:
             return 1
         elif self.type == 5:
@@ -156,7 +170,12 @@ class Asset:
             return 4
 
     @staticmethod
-    def asset_assign(asset_type):  # Assign internal type of the unit
+    def asset_assign(asset_type):
+        """
+        Assign internal type of the unit.
+        :param asset_type: Unit batch list.
+        :return: Returns unit internal type also specified in global vehicle_internals.
+        """
         if asset_type[0] == 1:
             result = asset_type[1]
         if asset_type[0] == 2:
@@ -166,6 +185,13 @@ class Asset:
         return result
 
     def attack(self, system, target, source):
+        """
+        Function for reducing asset weapon fired last turn and starting its target defensive method.
+        :param system: Weapon system used.
+        :param target: Target of the fired weapon system.
+        :param source: Unit object that fired.
+        :return: Returns nothing. yet...
+        """
         if not target:
             print(f"{system} has no target to attack.")
             return
@@ -177,13 +203,25 @@ class Asset:
         pass  # TODO
 
     def defense(self, system, attacker):
+        """
+        Function of hitting probability and decreasing unit status after hit.
+        :param system: Attacking weapon system.
+        :param attacker: Attacking vehicle.
+        """
+
+        # TODO Add the attacker as enemy next firing?
         print(f"{system} attacked by {attacker}")
         pass
 
 
-def battle_core(side_both, side_a, side_b):  # Core of the battle algorithm.
-    print("\n\n\n")
-    Message.start()
+def battle_core(side_a, side_b):
+    """
+    Core of the battle algorithm.
+    :param side_a: Objects of side a.
+    :param side_b: Objects of side b.
+    """
+    print("\n")
+    Message.message(0, default, header="unknown")
     won = False
     distance = 11
     while not won:
@@ -192,6 +230,13 @@ def battle_core(side_both, side_a, side_b):  # Core of the battle algorithm.
 
 
 def battle_airland_battle(side_a, side_b, distance):
+    """
+    Function launches attacks depending on distance between the groups.
+    :param side_a: Objects of side a.
+    :param side_b: Objects of side b.
+    :param distance: Distance between the groups.
+    :return: Returns nothing.
+    """
     for a in side_a:  # Air battle first
         distance = 0
         if a.systemtype == 3:
@@ -208,7 +253,13 @@ def battle_airland_battle(side_a, side_b, distance):
                 return
 
 
-def battle_target_acquisition(side_b, unit, weapon):  # Picks primary target depending on the vehicle type.
+def battle_target_acquisition(side_b, unit, weapon):
+    """
+    Picks primary target depending on the vehicle type.
+    :param side_b: Objects of side b.
+    :param unit: Object of side a attacking with weapon.
+    :param weapon: Object of side a weapon.
+    """
     maximum = 0
     target = False
     acquisition = battle_weapon_type(unit, weapon)
@@ -221,7 +272,13 @@ def battle_target_acquisition(side_b, unit, weapon):  # Picks primary target dep
     unit.attack(target, unit, weapon)
 
 
-def battle_weapon_type(unit, weapon):  # Returns type of weapon target - 1 veh, 2 radar, 3 air, 4 sea
+def battle_weapon_type(unit, weapon):
+    """
+    Returns type of weapon target - 1 veh, 2 radar, 3 air, 4 sea
+    :param unit: Asset obj.
+    :param weapon: Asset obj weapon fired.
+    :return: Returns units targeted by this weapon.
+    """
     if unit.systemtype == 1:  # Ground units attacking ground units
         return 1
     elif unit.systemtype == 2:  # MLB units against ship 4 and air 3
@@ -245,18 +302,14 @@ def battle_weapon_type(unit, weapon):  # Returns type of weapon target - 1 veh, 
 
 
 def system_name(vehicle, system):
+    """
+    Function converts system number into its name.
+    :param vehicle: Vehicle subtype category.
+    :param system: System of vehicle subtype category.
+    :return: Returns str name of system of the vehicle.
+    """
     return eq_systems[vehicle][system]
 
-
-"""
-vehicles
-1 - Ground battle, 2 - Air battle, 3 - naval battle
-systems
-1 - tank, afv, ifv, apc
-2 - sam, mlb
-3 - air
-4 - naval
-"""
 
 vehicles = {
     1: {1: "MBT", 2: "AFV", 3: "IFV", 4: "APC", 5: "SAM", 6: "MLB"},
@@ -281,22 +334,31 @@ state = {0: "KIA", 1: "Heavily Damaged", 2: "Major Damage taken", 3: "Light Dama
 
 
 def welcome():
-    version = "Welcome to Battle System Manager v0.7.4 (ALPHA)"
+    """
+    Introducing welcome!
+    """
+    version = "Welcome to Battle System Manager v0.7.5 (ALPHA)"
     print("=" * len(version), "\n", version, "\n", " " * ((len(version) - 13) // 2), "Made by Toonu\n",
           " " * ((len(version) - 21) // 2), "The Emperor of Iconia\n", " " * (len(version) // 2), "☩\n",
           " " * ((len(version) - 5) // 2), "☩☩☩☩☩\n", " " * (len(version) // 2), "☩\n", "≋" * len(version), "\n",
           sep="")
 
 
-def oob_main(years=[1975, 2020]):  # Main Body of assigning assets.
+def oob_main(years=None):
+    """
+    Main Body of assigning assets.
+    :param years: Lower and upper year limit of assets.
+    """
+    if years is None:
+        years = [1975, 2020]
     first = []
     second = []
-    battle_info = oob_battle_configuration(years)
-    if battle_info[2] is not None:
+    battle_info = oob_battle_configuration(years)  # Basic battle configuration and default values.
+    if battle_info[2] is not None:  # Changing default years.
         years = battle_info[2]
     print("Stage III: Adding Vehicles\n")
-    for side in range(1, 3):  # Creates the assets (vehicles) with numbered names and their specifications.
-        for i in range(battle_info[0][side]):
+    for side in range(1, 3):  # Creates obj with numbered names and specifications of other functions.
+        for i in range(battle_info[0][side]):  # Side a and b objects addition.
             if side == 1:
                 first.append("asset{0}_{1}".format(side, i))
                 first[i] = Asset("asset{0}_{1}".format(side, i),
@@ -310,10 +372,15 @@ def oob_main(years=[1975, 2020]):  # Main Body of assigning assets.
     oob_final(a, years)  # Finalizes and prints the OOB.
     clear()
     Message.wait("", 9)
-    battle_core(a, first, second)
+    battle_core(first, second)
 
 
-def oob_battle_configuration(years):  # Specify how many each side has and default year.
+def oob_battle_configuration(years):
+    """
+    Specify how many each side has and default year.
+    :param years: Lower and upper year limit of assets.
+    :return: Returns how many unit each side has, default year and lower/upper year limit of years.
+    """
     sides = {}
     while True:
         print("Battle configuration mode:\n\nStage I: Assigning year of battle.")
@@ -339,7 +406,15 @@ def oob_battle_configuration(years):  # Specify how many each side has and defau
                 sides[response] = user_input(minimum=1, msg="How many assets this side has?")
 
 
-def oob_asset_configuration(number, side, year, years):  # Specify each asset category, year and its type
+def oob_asset_configuration(number, side, year, years):
+    """
+    Specify each asset category, year and its type
+    :param number: Specify asset object number.
+    :param side: Specify asset side number.
+    :param year: Default asset year accepted if not changed.
+    :param years: Lower and upper year limit of assets.
+    :return: Returns unit category (veh, air, sea), type (subtype of category) and year of production.
+    """
     clear()  # Chooses unit category.
     category = user_input(1, 3, f"Asset configuration mode:\n\nasset{side}_{number}\nAsset #{number + 1} of {side} "
                                 f"side.\nWhat category of vehicles you want to add?\n1 | Ground\n2 | Air\n3 | Naval\n"
@@ -361,7 +436,12 @@ def oob_asset_configuration(number, side, year, years):  # Specify each asset ca
         return category, unit_type, year
 
 
-def oob_equipment(a):  # Equips units with systems.
+def oob_equipment(a):
+    """
+    Equips units with systems in form of dictionary. Also enable launch of cloning function.
+    :param a: All unit objects list.
+    :return: Returns Nothing.
+    """
     restart = True
     while restart:
         for unit in a:
@@ -374,8 +454,8 @@ def oob_equipment(a):  # Equips units with systems.
                     print(i, "=", eq_systems[unit.systemtype][i], end=" | ")
                 print(f"\n\nTo move to the next unit, select 0. To remove item, set "
                       f"item type and amount to 0. To finish, press {len(eq_systems[unit.systemtype]) + 1}.\nTo enter "
-                      f"cloning mode, type {len(eq_systems[unit.systemtype])}.\nChoose system the vehicle has equipped:"
-                      , end=" ")
+                      f"cloning mode, type {len(eq_systems[unit.systemtype])}.\n"
+                      f"Choose system the vehicle has equipped:", end=" ")
                 system = user_input(0, len(eq_systems[unit.systemtype]) + 1)
                 if int(system) == len(eq_systems[unit.systemtype]) + 1:
                     return
@@ -389,7 +469,13 @@ def oob_equipment(a):  # Equips units with systems.
             continue
 
 
-def oob_cloning(a):  # Duplicates equipped system to other units.
+# noinspection PyUnboundLocalVariable
+def oob_cloning(a):
+    """
+    Duplicates equipped syste dictionaries to other units.
+    :param a: All unit objects list.
+    :return: Returns nothing.
+    """
     while True:
         clear()
         print("Cloning mode:\n")
@@ -411,8 +497,9 @@ def oob_cloning(a):  # Duplicates equipped system to other units.
             for source_unit in a:
                 if source_unit.name == source:
                     source_systems = source_unit.systems
+                    source_type = source_unit.systemtype
             for unit in a:
-                if unit.name == "asset" + target_unit:
+                if unit.name == "asset" + target_unit and unit.systemtype == source_type:
                     unit.systems = source_systems.copy()
         clear()
         print("Cloning mode:\n")
@@ -424,6 +511,12 @@ def oob_cloning(a):  # Duplicates equipped system to other units.
 
 
 def oob_listing(a, name=False, year=False):
+    """
+    Lists all units and their equipment, side, year or name.
+    :param a: All unit objects list.
+    :param name: Prints also the unit name if True.
+    :param year: Prints also the unit year if True.
+    """
     for unit in a:
         if year and name:
             print(f"Side {unit.side} | {unit.year} | {unit.name} | {unit.typename} equipped with:", end=" ")
@@ -441,7 +534,13 @@ def oob_listing(a, name=False, year=False):
             print("only its own weapon system.")
 
 
-def oob_final(a, years):  # Prints units of both sides with their type and year.
+def oob_final(a, years):
+    """
+    Checks if everything is set properly after printing final order of battle. Leads to battle part of code.
+    :param a: All unit objects list.
+    :param years: Upper and lower year limit.
+    :return: Returns nothing
+    """
     while True:
         clear()
         print("Final Order of Battle:\n")
@@ -451,7 +550,7 @@ def oob_final(a, years):  # Prints units of both sides with their type and year.
             wrong_system = user_input(1, 3, "What is wrong?\n1 | Unit composition\n2 | Unit Equipment\n3 | Unit years"
                                             "\nYour input: ")
             if wrong_system == 1:
-                oob_asset_type_mod(a, years)
+                oob_mod_asset_type(a, years)
             elif wrong_system == 2:
                 oob_equipment(a)
             elif wrong_system == 3:
@@ -460,7 +559,13 @@ def oob_final(a, years):  # Prints units of both sides with their type and year.
             return
 
 
-def oob_asset_type_mod(a, years):
+def oob_mod_asset_type(a, years):
+    """
+    Changes object unit types and erases its equipment.
+    :param a: All unit objects list.
+    :param years: Upper and lower year limit.
+    :return: Returns nothing
+    """
     while True:
         clear()
         print("Unit modification tool:\n")
@@ -482,6 +587,12 @@ def oob_asset_type_mod(a, years):
 
 
 def oob_mod_year(a, years):
+    """
+    Function changes unit year of production.
+    :param a: All unit objects list.
+    :param years: Upper and lower year limit.
+    :return: Returns nothing.
+    """
     while True:
         clear()
         print("Year of unit editing:\n")
@@ -499,7 +610,10 @@ def oob_mod_year(a, years):
                     unit.reliability = new_year / 3000
 
 
-def clear():  # Clears the terminal
+def clear():
+    """
+    Clears the terminal
+    """
     import platform
     if platform.system() == "Windows" or platform.system() == "Linux":
         clear = lambda: os.system("cls")
@@ -509,6 +623,16 @@ def clear():  # Clears the terminal
 
 
 def user_input(minimum=0, maximum=100, msg="", enter=False, string=False, check=""):
+    """
+    User input function.
+    :param minimum: Lower limit to number check.
+    :param maximum: Upper limit to number check.
+    :param msg: Message printed when asking for input.
+    :param enter: If enter is permitted as input.
+    :param string: If string is permitted as input.
+    :param check: String input must have same format as check using RegEx.
+    :return: Returns user input.
+    """
     from re import match
     while True:
         value = input(msg)
@@ -526,6 +650,10 @@ def user_input(minimum=0, maximum=100, msg="", enter=False, string=False, check=
 
 
 def start(bugs=False):
+    """
+    Starting function for the whole program.
+    :param bugs: Enables bug logging for user. Shows error when the program crashes.
+    """
     if bugs:
         try:
             welcome()
@@ -540,4 +668,6 @@ def start(bugs=False):
         oob_main()
 
 
+default = Asset("default", [1, 1, 1999], 5, 1)
+default.systems[1] = 2
 start()
