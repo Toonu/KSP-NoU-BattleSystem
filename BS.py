@@ -1,5 +1,5 @@
 """
-Battle system for NoU
+Battle system for NoU.
 by Toonu
 """
 
