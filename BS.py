@@ -9,119 +9,172 @@ import time
 
 class Message:
     """
-    Message is printing messages
+    Message is printing random messages
     """
 
+    def battle_start(self, dot=False):
+        """
+        Prints
+        """
+        text = ["The battle is about to start.", "The battle is commencing.",
+                "Both forces deployed and started advancing towards each other",
+                "After long waiting, the order to attack has finally came..."]
+        if dot:
+            self.dotted()
+        print(text[random.randint(0, len(text) - 1)])
+
+    def fail_gun(self, unit, system_num, dot=False):
+        """
+        Prints
+        """
+        text = ["Contact was too slippery and the rounds bounced.", "Must have been poor luck, rounds haven't "
+                                                                    "penetrated.", "Shots lost the mark.",
+                "No penetration", "No good hits on the target.",
+                "Rounds haven't even scratched the enemy plates.", "Shot missed by a country mile.",
+                f"{unit.define_system(system_num)} failed to connect and couldn't have been fired.",
+                f"{unit.define_system(system_num)} malfunctioned."]
+        if dot:
+            self.dotted()
+        print(text[random.randint(0, len(text) - 1)])
+
+    def fail_missile(self, unit, system, dot=False):
+        """
+        Prints
+        """
+        text = [f"The {unit.define_system(system)} has failed to lock onto the target after launch.",
+                f"{unit.define_system(system)} has run out of fuel and auto destructed itself.",
+                f"{unit.define_system(system)} failed to lit its engine.",
+                f"{unit.define_system(system)} failed to connect and malfunctioned.",
+                "Enemy countermeasures were too much effective and misguided the "
+                f"{unit.define_system(system)} "
+                "into the surface.", f"{unit.define_system(system)} went and whiffed em’.",
+                "Failure to decouple.", "Failure to launch.."]
+        if dot:
+            self.dotted()
+        print(text[random.randint(0, len(text) - 1)])
+
+    def hit(self, unit, target, system, damage, dot=False):
+        """
+        Prints
+        """
+        text = [f"{target.typename.lower()} {target.name} was hit with {unit.define_system(system)} fired from "
+                f"{unit.typename.lower()} {unit.name} with {damage} dmg.",
+                f"{target.typename.lower()} {target.name} was damaged by {unit.define_system(system)} fired "
+                f"from {unit.typename.lower()} {unit.name} with {damage} dmg."]
+        if dot:
+            self.dotted()
+        print(text[random.randint(0, len(text) - 1)])
+
+    def ending(self, dot=False):
+        """
+        Prints
+        """
+        text = ["End of report.\nSigned Electronically", "End of report.\nProceed with your operation."]
+        if dot:
+            self.dotted()
+        print(text[random.randint(0, len(text) - 1)])
+
+    def miss_missile(self, unit, system, dot=False):
+        """
+        Prints
+        :param unit:
+        :param dot:
+        :param system:
+        """
+        text = [f"{unit.define_system(system)} missed the target.",
+                f"{unit.define_system(system)} is heading towards the sun now."]
+        if dot:
+            self.dotted()
+        print(text[random.randint(0, len(text) - 1)])
+
+    def miss_gun(self, unit, system, dot=False):
+        """
+        Prints
+        :param unit:
+        :param dot:
+        :param system:
+        """
+        text = [f"{unit.define_system(system)} shots missed the target.",
+                f"{unit.define_system(system)} FCS calculated the enemy speed with error and missed.",
+                f"{unit.typename} crew miscalculated the enemy movement and missed.",
+                f"{unit.define_system(system)} FCS error margin was too high.", "Missed the mark, trying again."]
+        if dot:
+            self.dotted()
+        print(text[random.randint(0, len(text) - 1)])
+
+    def kill(self, unit, unit_type, dot=False):
+        """
+        Prints
+        """
+        text = {
+            1: [f"“Nailed em! The {unit.typename}’s finished.”", f"Lad’s a fireball now. ({unit.name})",
+                f"Scratch one, he's finished! ({unit.name})",
+                f"Target crew bailed out! ({unit.name})",
+                f"Our shot penetrated the enemy and destroyed everything inside. ({unit.name})",
+                f"The {unit.typename} has been utterly crushed by his foes. ({unit.name})",
+                f"{unit.typename.capitalize()} {unit.name} status: Presumed KIA.",
+                f"{unit.typename.capitalize()} {unit.name} killed in action.",
+                f"{unit.typename.capitalize()} {unit.name} disappeared from battle control screen.",
+                f"{unit.typename.capitalize()} {unit.name} couldn't stood against such strong enemy."],
+            2: [f"“Nailed em! The {unit.typename}’s finished.”", f"Lad’s a fireball now. ({unit.name})",
+                f"Pilot of the {unit.typename} knocked out. ({unit.name})",
+                f"Plane burnt down. ({unit.name})", f"Engine of {unit.typename} Died: Fuel Starvation ({unit.name})",
+                f"Bandit down, no chute to be seen. ({unit.name})",
+                f",{unit.typename.capitalize()} {unit.name} status: Presumed KIA.",
+                f"{unit.typename.capitalize()} {unit.name} disappeared from battle control screen.",
+                f"{unit.typename.capitalize()} {unit.name} killed in action.",
+                f"{unit.typename.capitalize()} {unit.name} couldn't stood against such strong enemy."],
+            3: [f"“Nailed em! The {unit.typename}’s finished.”", f"Enemy is sinking. ({unit.name})",
+                f"Scratch one {unit.typename}! ({unit.name})",
+                f"Enemy has huge hole in his hull! ({unit.name})",
+                f"Target {unit.typename} is taking water and abandoning the ship was ordered! ({unit.name})",
+                f"They’ve gone to the Krusty Krab and never returned. ({unit.name})",
+                f"They’re going under, we got em! ({unit.name})",
+                f"The target {unit.typename} has achieved Salvation, by force. ({unit.name})",
+                f"May Neptune have mercy on them. ({unit.name})",
+                f"She got shoved into Davy Jones’ locker by the Sea Chad. ({unit.name})",
+                f"“Something something crisp white sheets.” ({unit.name})",
+                f"{unit.typename.capitalize()} {unit.name} status: Presumed KIA.",
+                f"{unit.typename.capitalize()} {unit.name} killed in action.",
+                f"{unit.typename.capitalize()} {unit.name} disappeared from battle control screen.",
+                f"{unit.typename.capitalize()} {unit.name} couldn't stood against such strong enemy."]}
+        if dot:
+            self.dotted()
+        print(text[unit_type][random.randint(0, len(text) - 1)])
+
+    def critical(self, unit, system, dot=False):
+        """
+        Prints
+        """
+        text = ["Critical hit!", "The enemy has been hit precisely into weakspot!", "Devastating blow!",
+                f"The {unit.typename} {unit.name} has been hit precisely into weakspot!",
+                f"{unit.define_system(system)} critically hit the enemy"]
+        if dot:
+            self.dotted()
+        print(text[random.randint(0, len(text) - 1)])
+
     @staticmethod
-    def message(msg_type, unit, target, system=1, headline="", dot=True, dots=True, repeat=0, header=True, wait=True):
+    def dotted():
         """
-        Prints various random messages from the message dict.
-        :param target: Second obj
-        :param headline: Header subject message.
-        :param wait: Disable wait message.
-        :param msg_type: Type of message from the dict.
-        :param unit: Vehicle obj affected.
-        :param header: Disable header message.
-        :param system: Vehicle obj weapon system.
-        :param dot: Triple dots in wait message.
-        :param dots: Dots in wait message.
-        :param repeat: How many triple dots are repeated in wait message.
-
-         #  0 | Battle start, 1 | Death, 2 | Gun malfunctions, 3 | Missile failure, 4 | Hit, 5 | End of report
+        Prints the message with dots and waiting.
         """
-        messages = {0: ["The battle is about to start.", "The battle is commencing.",
-                        "Both forces deployed and started advancing towards each other",
-                        "After long waiting, the order to attack has finally came..."],
-                    1: [],
-                    2: ["Contact was too slippery and the rounds bounced.", "Must have been poor luck, rounds haven't"
-                                                                            "penetrated.", "Shots lost the mark.",
-                        "No penetration", "No good hits on the target.",
-                        "Rounds haven't even scratched the enemy plates.", "Shot missed by a country mile.",
-                        f"{unit.define_system(system)} failed to connect and couldn't have been fired.",
-                        f"{unit.define_system(system)} malfunctioned.", "Missed the mark, try again."],
-                    3: [f"The {unit.define_system(system)} has failed to lock onto the target after launch.",
-                        f"{unit.define_system(system)} has run out of fuel and auto destructed itself.",
-                        f"{unit.define_system(system)} failed to lit its engine.",
-                        f"{unit.define_system(system)} failed to connect and malfunctioned.",
-                        f"Enemy countermeasures were too much effective and misguided the {unit.define_system(system)} "
-                        f"into the surface.", f"{unit.define_system(system)} went and whiffed em’.",
-                        f"Failure to decouple.", f"Failure to launch.."],
-                    4: [f"{target.typename.lower()} {target.name} was hit with {unit.define_system(system)} fired from "
-                        f"{unit.typename.lower()} {unit.name} with {headline} dmg.",
-                        f"{target.typename.lower()} {target.name} was damaged by {unit.define_system(system)} fired "
-                        f"from {unit.typename.lower()} {unit.name} with {headline} dmg."],
-                    5: ["End of report.\nSigned Electronically", "End of report.\nProceed with your operation."],
-                    6: [f"{unit.define_system(system)} missed the target.",
-                        f"{unit.define_system(system)} is heading towards the sun now."]
-                    }
-
-        if header:
-            Message.header(headline)
-        if wait:
-            Message.wait(messages[msg_type][random.randint(0, len(messages[msg_type]) - 1)], i=repeat, dot=dot,
-                         dots=dots)
-        if not header and not wait:
-            Message.wait(messages[msg_type][random.randint(0, len(messages[msg_type]) - 1)], i=0, dot=False, dots=False)
+        for i in range(random.randint(3, 6)):
+            print("." * i, end="")
+            time.sleep(0.8)
+        print()
 
     @staticmethod
-    def kill(unit):
+    def report(msg=""):
         """
-        Prints killing message.
-        :param unit: Unit obj that was killed.
-        """
-        kill = {1: [f"“Nailed em! He’s finished.”", f"Lad’s a fireball now.", f"Scratch one, he's finished!",
-                    f"Target crew bailed out", f"Our shot penetrated the enemy and destroyed everything inside.",
-                    "The enemy has been utterly crushed by his foes.",
-                    f",{unit.typename.capitalize()} {unit.name} status: Presumed KIA.",
-                    f"{unit.typename.capitalize()} {unit.name} killed in action.",
-                    f"{unit.typename.capitalize()} {unit.name} disappeared from battle control screen.",
-                    f"{unit.typename.capitalize()} {unit.name} couldn't stood against such strong enemy."],
-                2: [f"“Nailed em! He’s finished.”", f"Lad’s a fireball now.", f"Pilot knocked out.",
-                    f"Plane burnt down.", f"Engine Died: Fuel Starvation", f"Bandit down, no chute to be seen.",
-                    f",{unit.typename.capitalize()} {unit.name} status: Presumed KIA.",
-                    f"{unit.typename.capitalize()} {unit.name} disappeared from battle control screen.",
-                    f"{unit.typename.capitalize()} {unit.name} killed in action.",
-                    f"{unit.typename.capitalize()} {unit.name} couldn't stood against such strong enemy."],
-                3: [f"“Nailed em! He’s finished.”", f"Enemy is sinking.", f"Scratch one!",
-                    f"Enemy has huge hole in his hull", f"Target is taking water and abandoning the ship was ordered.",
-                    "They’ve gone to the Krusty Krab and never returned.", "They’re going under, we got em!",
-                    "The target has achieved Salvation, by force.", "May Neptune have mercy on them.",
-                    "She got shoved into Davy Jones’ locker by the Sea Chad.",
-                    "“Something something crisp white sheets.”",
-                    f",{unit.typename.capitalize()} {unit.name} status: Presumed KIA.",
-                    f"{unit.typename.capitalize()} {unit.name} killed in action.",
-                    f"{unit.typename.capitalize()} {unit.name} disappeared from battle control screen.",
-                    f"{unit.typename.capitalize()} {unit.name} couldn't stood against such strong enemy."]}
-        print(kill[unit.type][random.randint(1, len(kill))])
-
-    @staticmethod
-    def header(craft):
-        """
-        Prints header message.
-        :param craft: Headline of header message.
-        """
-        print(craft)
+            Prints the message in a report.
+            :param msg: Message to print as report name.
+            """
+        if msg != "":
+            print(msg)
+        else:
+            print("")
         print("Report:", random.randint(25000, 300000), time.strftime("       %D-%H:%M:%S", time.localtime()))
-        print("        Confidental eyes only\n         Classified Document\n   To OPFOR, MoD, AFHC, TLBC, BCTC")
-
-    @staticmethod
-    def wait(message, i=3, dots=True, dot=True):
-        """
-        Reply with random dots and message
-        :param message: Message to be printed after dots.
-        :param i: How many triple-dots are printed before the main message.
-        :param dots: If random dots are printed before the triple dots.
-        :param dot: If the triple dots are printed.
-        """
-        if dots:
-            symbol = "."
-            for repeat in range(6):
-                print(symbol * random.randint(2, 4), end="")
-                time.sleep(1)
-            if dot:
-                print("\n" + symbol * i, end="")
-            time.sleep(1.5)
-        print(str(message))
+        print("        Confidental eyes only\n         Classified Document\n   To OPFOR, MoD, AFHC, TLBC, BCTC\n")
 
 
 class Asset:
@@ -135,8 +188,8 @@ class Asset:
         self.external = batch[1]  # Unit specific type Eg. 1 for MBT or Small Multirole
         self.internal = self.asset_assign(batch)  # Internal unit type
         self.typename = vehicles[batch[0]][batch[1]][0]  # Asset name Eg. MBT
-        self.state = 8  # How much alive asset is
-        self.statename = state[self.state]  # How much alive asset is in normal name
+        self.state = vehicles[batch[0]][batch[1]][2]  # How much alive asset is
+        self.statename = self.set_state()  # How much alive asset is in normal name
         self.side = side  # Fighting side
         self.year = batch[2]  # Year of origin
         self.reliability = (self.year - 1945) // 2  # Reliability of its WS
@@ -146,7 +199,25 @@ class Asset:
         self.has_radar = self.has_radar_fn()
 
     def __str__(self):
-        return str(self.name + "_" + self.typename + " - State: " + str(self.statename))
+        return str(f"{self.name}_{self.typename}- State: {str(self.statename)}")
+
+    def set_state(self):
+        """
+        Sets unit state name
+        :return:
+        """
+        if vehicles[self.type][self.external][2] == 4:
+            return state[self.state * 2]
+        elif vehicles[self.type][self.external][2] == 6:
+            return state[round(self.state * 1.25)]
+        elif vehicles[self.type][self.external][2] == 8:
+            return state[self.state]
+        elif vehicles[self.type][self.external][2] == 10:
+            return state[round(self.state / 1.25)]
+        elif vehicles[self.type][self.external][2] == 16:
+            return state[self.state // 2]
+        else:
+            return state[round(self.state / 2.5)]
 
     def add_system(self, system, amount):
         """
@@ -225,56 +296,69 @@ class Asset:
         :param unit: Attacking vehicle.
         :param system: Attacking weapon system.
         """
-        global state
-        critical = 1
-        if self.state > 0:
-            reliability = unit.reliability + random.randint(0, 30)
-            if reliability > 30:
-                probability = random.randint(0, 100)
-                for defensive in self.systems.copy():
-                    if eq_systems[self.type][defensive][1] < 0:
-                        if unit.type == 1 and defensive == 2:
-                            pass
-                        elif unit.type == 2 and defensive in (3, 4):
-                            pass
-                        elif unit.type == 3 and defensive in (2, 3):
-                            pass
-                        else:
-                            self.systems[defensive] -= 1
-                        probability -= 10 * -eq_systems[self.type][self.external][1]
-                        if self.systems[defensive] == 0:
-                            self.systems.pop(defensive)
-                if probability <= 30:
-                    if system > 89 or unit.type == 3 and system == 1:
-                        Message.message(2, unit, self, system, header=False)
-                    else:
-                        Message.message(3, unit, self, system, header=False)
-                    return 1
-                elif 31 <= probability <= 89:
-                    Message.message(4, unit, self, system, headline=eq_systems[unit.type][system][1], header=False)
-                    self.state -= eq_systems[unit.type][system][1]
-                elif 90 <= probability:
-                    critical = 2
-                    Message.message(4, unit, self, system, headline=eq_systems[unit.type][system][1] * critical,
-                                    header=False)
-                    self.state -= eq_systems[unit.type][system][1] * critical
-            else:
-                if system > 89 or unit.type == 3 and system == 1:
-                    Message.message(2, unit, self, system, header=False)
-                else:
-                    Message.message(3, unit, self, system, header=False)
-                return 1
 
-        try:
-            self.statename = state[self.state]
-        except IndexError:
-            self.state = 0
-            self.statename = state[0]
-        if self.state <= 0:
-            Message.kill(self)
+        if unit.reliability + random.randint(0, 50) > 45:  # Malfunction by reliability.
+            probability = self.countermeasures(unit, system)
+            hit = self.hit_probability(unit, system, probability)
+
+        else:  # Mafunction message
+            if system > 89 or unit.type == 3 and system == 1:
+                message.fail_gun(unit, system)
+            else:
+                message.fail_missile(unit, system)
+
+        if self.state <= 0:  # Asset destroyed.
+            message.kill(self, self.type)
             return None
         else:
             return 1
+
+    def countermeasures(self, unit, system):
+        """
+        Defending unit with countermeasures and its logic.
+        :param unit:
+        :param system:
+        """
+        probability = random.randint(0, 100)
+        for def_sys in self.systems.copy():
+            if eq_systems[self.type][def_sys][1] < 0 and system < 90:
+                if not (unit.type == 1 and def_sys == 2) or not (unit.type == 2 and def_sys in (3, 4)) or not \
+                        (unit.type == 3 and def_sys in (2, 3)):  # Systems that do not reduce due to no ammunition.
+                    self.systems[def_sys] -= 1
+                probability -= random.randint(10 * -eq_systems[self.type][self.external][1] // 2,
+                                              10 * -eq_systems[self.type][self.external][1])
+                if self.systems[def_sys] == 0:  # Removing system if empty.
+                    self.systems.pop(def_sys)
+        return probability
+
+    def hit_probability(self, unit, system, probability):
+        """
+        Calculates damage to targed based on hit probability.
+        :param unit:
+        :param unit:
+        :param system:
+        :param probability:
+        :return:
+        """
+        if probability <= 30:  # Miss
+            if system > 89 or (unit.type == 3 and system == 1):
+                return None, message.miss_gun(unit, system)
+            else:
+                return None, message.miss_missile(unit, system)
+
+        elif 31 <= probability <= 89:  # Normal hit
+            shot = eq_systems[unit.type][system][1] + random.randint(-2, 1)
+            if shot < 0:
+                shot = 0
+            self.state -= shot
+            self.statename = self.set_state()
+            return 1, message.hit(unit, self, system, shot)
+
+        elif 90 <= probability:  # Critical hit
+            critic = 2
+            self.state -= (eq_systems[unit.type][system][1] * critic) - random.randint(-2, 1)
+            self.statename = self.set_state()
+            return 2, message.critical(self, system)
 
 
 def battle_core(side_a, side_b):
@@ -288,7 +372,8 @@ def battle_core(side_a, side_b):
     while len(side_b) > 0 and len(side_a) > 0:
         turn += 1
         clear()
-        Message.header(f"Turn: {turn}")
+        message.battle_start()
+        message.report(f"Turn: {turn}")
         result = battle_ws_by_distance(side_a, side_b)
         if result:
             print("Nothing happened this in turn.")
@@ -297,6 +382,7 @@ def battle_core(side_a, side_b):
             break
 
     clear()
+    print("Remaining units: \n\n")
     if notfound > 99:
         print("Draw! Nothing to attack with units on both sides!")
         input()
@@ -381,39 +467,41 @@ def battle_target_acquisition(unit_list, unit, weapon):
 
 # Eq System Category: {System: {Name str, dmg int, target int/tuple, range int, min range int}}
 vehicles = {
-    1: {1: ("MBT", (90, 1, 2, 3, 4)), 2: ("AFV", (91, 1, 2, 3, 4)), 3: ("IFV", (92, 1, 2, 3)),
-        4: ("APC", (93, 1, 2, 3)),
-        5: ("SAM", (94, 1, 2, 3, 5, 6, 7)), 6: ("MLB", (95, 1, 2, 3, 8, 9))},
-    2: {1: ("Small Multirole Aircraft", (90, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13)),
-        2: ("Medium Multirole Aircraft", (91, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13)),
-        3: ("Large Multirole Aircraft", (92, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13)),
-        4: ("Large Heavy Aircraft", (93, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13)),
-        5: ("Very Large Heavy Aircraft", (94, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13))},
-    3: {1: ("Corvette", (90, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11)),
-        2: ("Frigate", (91, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11)),
-        3: ("Destroyer", (92, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11)),
-        4: ("Cruiser", (93, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11)),
-        5: ("Battlecruiser", (94, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11)),
-        6: ("Battleship", (95, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11)),
-        7: ("Light Carrier", (96, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11)),
-        8: ("Aircraft Carrier", (97, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11))}
+    1: {1: ("MBT", (90, 1, 2, 3, 4), 8), 2: ("AFV", (91, 1, 2, 3, 4), 8), 3: ("IFV", (92, 1, 2, 3), 6),
+        4: ("APC", (93, 1, 2, 3), 4),
+        5: ("SAM", (94, 1, 2, 3, 5, 6, 7), 4), 6: ("MLB", (95, 1, 2, 3, 8, 9), 4)},
+    2: {1: ("Small Multirole Aircraft", (90, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13), 4),
+        2: ("Medium Multirole Aircraft", (91, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13), 6),
+        3: ("Large Multirole Aircraft", (92, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13), 8),
+        4: ("Large Heavy Aircraft", (93, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13), 10),
+        5: ("Very Large Heavy Aircraft", (94, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13), 10)},
+    3: {1: ("Corvette", (90, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11), 4),
+        2: ("Frigate", (91, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11), 6),
+        3: ("Destroyer", (92, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11), 8),
+        4: ("Cruiser", (93, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11), 10),
+        5: ("Battlecruiser", (94, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11), 16),
+        6: ("Battleship", (95, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11), 20),
+        7: ("Light Carrier", (96, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11), 16),
+        8: ("Aircraft Carrier", (97, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11), 20)}
 }
 vehicles_internal = {1: "MBT", 2: "AFV", 3: "IFV", 4: "APC", 5: "SAM", 6: "MLB", 7: "Small Multirole Aircraft",
                      8: "Medium Multirole Aircraft", 9: "Large Multirole Aircraft", 10: "Large Heavy Aircraft",
                      11: "Very Large Heavy Aircraft", 12: "Corvette", 13: "Frigate", 14: "Destroyer", 15: "Cruiser",
                      16: "Battlecruiser", 17: "Battleship", 18: "Light Carrier", 19: "Aircraft Carrier"}
 eq_systems = {
-    1: {1: ("Smoke", -2, 0, 0, 0), 2: ("SK-APS", -3, 0, 0, 0), 3: ("HK-APS", -4, 0, 0, 0),
-        4: ("ATGM", 3, (1, 3), 3, 0), 5: ("SR-SAM", 3, 2, 2, 0), 6: ("MR-SAM", 3, 2, 4, 0), 7: ("LR-SAM", 3, 2, 12, 3),
-        8: ("MR-AShM", 5, 3, 4, 0), 9: ("LR-AShM", 5, 3, 6, 0), 90: ("tank gun", 5, 1, 2, 0),
-        91: ("autocannon", 2, (1, 2), 2, 0), 92: ("heavy MG", 1, (1, 2), 2, 0), 93: ("light MG", 1, 1, 1, 0),
-        94: ("crew handheld firearms", 1, 1, 1, 0), 95: ("crew handheld firearms", 1, 1, 1, 0)},
+    1: {1: ("Smoke", -2, 0, 0, 0), 2: ("SK-APS", -3, 0, 0, 0), 3: ("HK-APS", -4, 0, 0, 0), 4: ("ERA", -6, 0, 0, 0),
+        5: ("NxRA", -8, 0, 0, 0), 6: ("Applique", -3, 0, 0, 0), 7: ("ATGM", 4, (1, 3), 3, 0),
+        8: ("SR-SAM", 3, 2, 2, 0), 9: ("MR-SAM", 3, 2, 4, 0), 10: ("LR-SAM", 3, 2, 12, 3), 11: ("MR-AShM", 5, 3, 4, 0),
+        12: ("LR-AShM", 5, 3, 6, 0), 90: ("tank gun", 5, 1, 2, 0), 91: ("autocannon", 2, (1, 2), 2, 0),
+        92: ("heavy MG", 1, (1, 2), 2, 0), 93: ("light MG", 1, 1, 1, 0), 94: ("crew handheld firearms", 1, 1, 1, 0),
+        95: ("crew handheld firearms", 1, 1, 1, 0)},
     2: {1: ("Flares", -2, 0, 0, 0), 2: ("Chaff", -2, 0, 0, 0), 3: ("ECM", -2, 0, 0, 0),
         4: ("EWS", -3, 0, 0, 0), 5: ("SRAAM", 4, 2, 2, 0), 6: ("MRAAM", 4, 2, 4, 0), 7: ("LRAAM", 4, 2, 12, 3),
         8: ("AGM", 4, 1, 3, 0), 9: ("MR-AShM", 5, 3, 4, 0), 10: ("SEAD", 5, 4, 4, 0),
         11: ("Cruise Missile", 3, 1, 5, 0), 12: ("Bomb", 2, 1, 1, 0), 13: ("GBU", 4, 1, 1, 0),
-        90: ("coaxial cannon", 1, 2, 1, 0), 91: ("coaxial cannon", 2, 2, 1, 0), 92: ("coaxial cannon", 2, 2, 1, 0),
-        93: ("coaxial cannon", 1, 2, 1, 0), 94: ("coaxial cannon", 1, 2, 1, 0)},
+        90: ("coaxial cannon", 1, (1, 2), 1, 0), 91: ("coaxial cannon", 2, (1, 2), 1, 0),
+        92: ("coaxial cannon", 2, (1, 2), 1, 0), 93: ("defense turrets", 1, 2, 1, 0),
+        94: ("defense turrets", 1, 2, 1, 0)},
     3: {1: ("CIWS", -5, 2, 2, 0), 2: ("DEW", -7, 2, 2, 0), 3: ("ECM", -2, 0, 0, 0),
         4: ("Smoke", -2, 0, 0, 0), 5: ("Chaff", -2, 0, 0, 0), 6: ("SR-SAM", 3, 2, 2, 0), 7: ("MR-SAM", 3, 2, 4, 0),
         8: ("LR-SAM", 3, 2, 12, 3), 9: ("MR-AShM", 5, 3, 4, 0), 10: ("LR-AShM", 5, 3, 6, 0),
@@ -424,17 +512,20 @@ eq_systems = {
         97: ("auxiliary weapons", 1, (2, 3), 1, 0)}
 }
 state = ["KIA", "Heavily Damaged", "Major Damage taken", "Damaged", "Slightly damaged", "Scratched", "In nominal state",
-         "Worried", "New", "Withdrawing"]
+         "Worried", "New", "Withdrawing", "unknown"]
 
+
+# TODO Add defense systems only against missiles etc
 
 def welcome():
     """
     Introducing welcome!
     """
-    version = "Welcome to Battle System Manager v0.8.8 (ALPHA)"
-    print("=" * len(version), "\n", version, "\n", " " * ((len(version) - 13) // 2), "Made by Toonu\n",
-          " " * ((len(version) - 21) // 2), "The Emperor of Iconia\n", " " * (len(version) // 2), "☩\n",
-          " " * ((len(version) - 5) // 2), "☩☩☩☩☩\n", " " * (len(version) // 2), "☩\n", "≋" * len(version), "\n",
+    version = "0.8.9"
+    headline = f"Welcome to Battle System Manager v{version} (ALPHA)"
+    print("=" * len(headline), "\n", headline, "\n", " " * ((len(headline) - 13) // 2), "Made by Toonu\n",
+          " " * ((len(headline) - 21) // 2), "The Emperor of Iconia\n", " " * (len(headline) // 2), "☩\n",
+          " " * ((len(headline) - 5) // 2), "☩☩☩☩☩\n", " " * (len(headline) // 2), "☩\n", "≋" * len(headline), "\n",
           sep="")
 
 
@@ -630,20 +721,20 @@ def oob_listing(a, name=False, year=False, status=False, distance=False, equip=T
     :param year: Prints also the unit year if True.
     """
     for unit in a:
-        message = f"Side {unit.side} |"
+        printed = f"Side {unit.side} |"
         ending = f" {unit.typename}"
         if year:
-            message += f" {unit.year} |"
+            printed += f" {unit.year} |"
         if name:
-            message += f" {unit.name} |"
+            printed += f" {unit.name} |"
         if status:
-            message += f" {unit.state} |"
+            printed += f" {unit.state} |"
         if distance:
-            message += f" {unit.distance} |"
+            printed += f" {unit.distance} |"
         if equip:
             ending += f" equipped with: "
 
-        print(message + ending, end="")
+        print(printed + ending, end="")
         if equip:
             for thing, amount in unit.systems.items():
                 print(eq_systems[unit.type][thing][0], amount, end=", ")
@@ -693,7 +784,6 @@ def oob_mod_asset_type(a, years):
         else:
             for unit in a:
                 if not isinstance(response, int) and unit.name == "asset" + response:
-                    unit.systems = {99: 1}
                     batch = oob_asset_configuration(unit.type, unit.side, unit.year, years)
                     unit.year = batch[2]
                     unit.reliability = unit.year - 1900
@@ -701,6 +791,7 @@ def oob_mod_asset_type(a, years):
                     unit.typename = vehicles[batch[0]][batch[1]][0]
                     unit.external = batch[1]
                     unit.type = batch[0]
+                    unit.systems = {89 + unit.external: 1}
 
 
 def oob_mod_year(a, years):
@@ -784,7 +875,10 @@ def start(bugs=False):
         oob_main()
 
 
-notfound = 0
 default = Asset("default", [1, 1, 1999], 1)
 default.systems[1] = 2
+
+message = Message()
+
+notfound = 0
 start()
