@@ -1,0 +1,10 @@
+unit.state, unit.statename, DEFENDER****
+unit.distance, unit.turn, ATTACKER****
+unit.systems decreasing and removing ATTACKER AND DEFENDER****
+
+unit pop if dead + unit pop if retreated + unit append to retreated
+if no target for every craft, draw battle
+
+turn increasing****
+logic behind - choose random target, then weapon****
+

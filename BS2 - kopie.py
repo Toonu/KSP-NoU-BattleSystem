@@ -57,7 +57,7 @@ class Message:
         """
         Prints
         """
-        text = [f"{unit.typename.lower()} {unit.name} > {target.typename.lower()} {target.name} "
+        text = [f"{unit.typename.lower()} {unit.name} | {target.typename.lower()} {target.name} "
                 f"{unit.define_system(system)} with {damage} dmg."]
         if dot:
             self.dotted()
@@ -103,7 +103,7 @@ class Message:
             self.dotted()
         print(text[random.randint(0, len(text) - 1)])
 
-    def kill(self, unit, dot=False):
+    def kill(self, unit, unit_type, dot=False):
         """
         Prints
         """
@@ -117,32 +117,31 @@ class Message:
                 f"KILL {unit.typename.capitalize()} {unit.name} killed in action.",
                 f"KILL {unit.typename.capitalize()} {unit.name} disappeared from battle control screen.",
                 f"KILL {unit.typename.capitalize()} {unit.name} couldn't stood against such strong enemy."],
-            2: [f"KILL “Nailed em! The {unit.typename}’s finished.”", f"KILL Lad’s a fireball now. ({unit.name})",
-                f"KILL Pilot of the {unit.typename} knocked out. ({unit.name})",
-                f"KILL Plane burnt down. ({unit.name})",
-                f"KILL Engine of {unit.typename} Died: Fuel Starvation ({unit.name})",
-                f"KILL Bandit down, no chute to be seen. ({unit.name})",
-                f"KILL {unit.typename.capitalize()} {unit.name} status: Presumed KIA.",
-                f"KILL {unit.typename.capitalize()} {unit.name} disappeared from battle control screen.",
-                f"KILL {unit.typename.capitalize()} {unit.name} killed in action.",
-                f"KILL {unit.typename.capitalize()} {unit.name} couldn't stood against such strong enemy."],
-            3: [f"KILL “Nailed em! The {unit.typename}’s finished.”", f"KILL Enemy is sinking. ({unit.name})",
-                f"KILL Scratch one {unit.typename}! ({unit.name})",
-                f"KILL Enemy has huge hole in his hull! ({unit.name})",
-                f"KILL Target {unit.typename} is taking water and abandoning the ship was ordered! ({unit.name})",
-                f"KILL They’ve gone to the Krusty Krab and never returned. ({unit.name})",
-                f"KILL They’re going under, we got em! ({unit.name})",
-                f"KILL The target {unit.typename} has achieved Salvation, by force. ({unit.name})",
-                f"KILL May Neptune have mercy on them. ({unit.name})",
-                f"KILL She got shoved into Davy Jones’ locker by the Sea Chad. ({unit.name})",
-                f"KILL “Something something crisp white sheets.” ({unit.name})",
-                f"KILL {unit.typename.capitalize()} {unit.name} status: Presumed KIA.",
-                f"KILL {unit.typename.capitalize()} {unit.name} killed in action.",
-                f"KILL {unit.typename.capitalize()} {unit.name} disappeared from battle control screen.",
-                f"KILL {unit.typename.capitalize()} {unit.name} couldn't stood against such strong enemy."]}
+            2: [f"“Nailed em! The {unit.typename}’s finished.”", f"Lad’s a fireball now. ({unit.name})",
+                f"Pilot of the {unit.typename} knocked out. ({unit.name})",
+                f"Plane burnt down. ({unit.name})", f"Engine of {unit.typename} Died: Fuel Starvation ({unit.name})",
+                f"Bandit down, no chute to be seen. ({unit.name})",
+                f",{unit.typename.capitalize()} {unit.name} status: Presumed KIA.",
+                f"{unit.typename.capitalize()} {unit.name} disappeared from battle control screen.",
+                f"{unit.typename.capitalize()} {unit.name} killed in action.",
+                f"{unit.typename.capitalize()} {unit.name} couldn't stood against such strong enemy."],
+            3: [f"“Nailed em! The {unit.typename}’s finished.”", f"Enemy is sinking. ({unit.name})",
+                f"Scratch one {unit.typename}! ({unit.name})",
+                f"Enemy has huge hole in his hull! ({unit.name})",
+                f"Target {unit.typename} is taking water and abandoning the ship was ordered! ({unit.name})",
+                f"They’ve gone to the Krusty Krab and never returned. ({unit.name})",
+                f"They’re going under, we got em! ({unit.name})",
+                f"The target {unit.typename} has achieved Salvation, by force. ({unit.name})",
+                f"May Neptune have mercy on them. ({unit.name})",
+                f"She got shoved into Davy Jones’ locker by the Sea Chad. ({unit.name})",
+                f"“Something something crisp white sheets.” ({unit.name})",
+                f"{unit.typename.capitalize()} {unit.name} status: Presumed KIA.",
+                f"{unit.typename.capitalize()} {unit.name} killed in action.",
+                f"{unit.typename.capitalize()} {unit.name} disappeared from battle control screen.",
+                f"{unit.typename.capitalize()} {unit.name} couldn't stood against such strong enemy."]}
         if dot:
             self.dotted()
-        print(text[unit.type][random.randint(0, len(text) - 1)])
+        print(text[unit_type][random.randint(0, len(text) - 1)])
 
     def critical(self, unit, system, dot=False):
         """
@@ -196,18 +195,12 @@ class Asset:
         self.year = batch[2]  # Year of origin
         self.reliability = (self.year - 1945) // 2  # Reliability of its WS
         self.systems = self.systems_ammo()
-        self.distance = self.distance_per_side()
+        self.distance = 11
         self.turn = 1
         self.has_radar = self.has_radar_fn()
 
     def __str__(self):
-        return str(f"{self.name}_{self.typename} - State: {str(self.statename)}")
-
-    def distance_per_side(self):
-        if self.side == 1:
-            return 6
-        else:
-            return -6
+        return str(f"{self.name}_{self.typename}- State: {str(self.statename)}")
 
     def systems_ammo(self):
         """
@@ -299,165 +292,101 @@ class Asset:
             result = asset_type[1] + len(vehicles[1]) + len(vehicles[2])
         return result
 
-    def attack(self, sides, side_a, side_b):
+    def attack(self, system, target):
         """
+        Function for reducing asset weapon fired last turn and starting its target defensive method.
+        :param system: Weapon system used.
+        :param target: Target of the fired weapon system.
+        :return: Returns nothing. yet...
+        """
+        if not target:
+            global notfound
+            print(f"{self} has no target to attack.")
+            notfound += 1
+            return
 
-        :param sides:
-        :return: Returns None if nothing could have been attacked, if something was attacked, returns
-        """
-        attack_result = (0, 0), 0
-        maximum = 0
-        best_system = 0
-        cont = False
-        while True:
-            target = sides.copy()[random.randint(0, len(sides.copy()) - 1)]
-            if target.side != self.side:
-                for system in self.systems:
-                    try:
-                        if target.has_radar and eq_systems[self.type][system][3] >= \
-                                abs(self.distance - target.distance) >= eq_systems[self.type][system][4]:
-                            cont = True
-                        elif target.type in eq_systems[self.type][system][2] and eq_systems[self.type][system][3] >= \
-                                abs(self.distance - target.distance) >= eq_systems[self.type][system][4]:
-                            cont = True
-                    except TypeError:
-                        if eq_systems[self.type][system][2] == target.type and eq_systems[self.type][system][3] >= \
-                                abs(self.distance - target.distance) >= eq_systems[self.type][system][4]:
-                            cont = True
-                    if eq_systems[self.type][system][1] > maximum:  # getting max damage weapon
-                        maximum = eq_systems[self.type][system][1]
-                        best_system = system
-                if cont:
-                    self.systems[best_system] -= 1
-                    if self.systems[best_system] <= 0:
-                        self.systems.pop(best_system)
-                    probability = self.probability(self, best_system)
-                    if probability < 30:
-                        self.failure(best_system, probability, target)
-                    else:
-                        attack_result = target.defense(self, best_system, probability)
-                        self.failure(best_system, attack_result[0], target, attack_result[1])
-                    break
-                break
-            else:
-                continue
+        self.systems[system] -= 1
+        if self.systems[system] == 0:
+            self.systems.pop(system)
 
-        self.turn += 1
-        if self.statename == "Withdrawing":  # Withdrawal
-            if self.side == 1:
-                self.distance += 2
-            else:
-                self.distance -= 2
-            if self.distance < -9 or self.distance > 9:
-                global retreated
-                retreated.append(self)
-                return 5, self
-        elif self.distance > 0 and self.side == 1:
-            self.distance -= 1
-        elif self.distance < 0 and self.side == 2:
-            self.distance += 1
-        pursue = self.pursue(side_a, side_b)
-        if self.side == 1 and pursue[1]:
-            self.distance -= 2
-        elif self.side == 2 and pursue[0]:
-            self.distance += 2
-
-        return attack_result[0], target
-
-    @staticmethod
-    def pursue(side_a, side_b):
-        """
-
-        :param side_a:
-        :param side_b:
-        :return:
-        """
-        pursue_a = False
-        pursue_b = False
-        for a in side_a:
-            if a.statename == "Withdrawing":
-                pursue_b = True
-            else:
-                pursue_b = False
-        for b in side_b:
-            if b.statename == "Withdrawing":
-                pursue_a = True
-            else:
-                pursue_a = False
-        return pursue_a, pursue_b
-
-    def failure(self, system, fail, target, damage=0):
-        """
-        Fail messages.
-        :param target:
-        :param damage:
-        :param system:
-        :param fail:
-        """
-        if fail == 1:  # Mafunction message
-            if system > 89 or self.type == 3 and system == 1:
-                message.fail_gun(self, system)
-            else:
-                message.fail_missile(self, system)
-        elif fail == 2:
-            if system > 89 or (self.type == 3 and system == 1):
-                message.miss_gun(self, system)
-            else:
-                message.miss_missile(self, system)
-        elif fail == 3:
-            message.hit(self, target, system, damage)
-        elif fail == 4:
-            message.critical(self, system)
-        elif fail == 5:
-            message.hit(self, target, system, damage)
-            message.kill(target)
-
-    def probability(self, attacker, system):
-        """
-        Calculates probability minus countermeasures.
-        :param attacker:
-        :param system:
-        :return:
-        """
-        if attacker.reliability + random.randint(0, 50) > 50:  # Malfunction by reliability.
-            probability = random.randint(0, 100)
-            for def_sys in self.systems.copy():
-                if eq_systems[self.type][def_sys][1] < 0 and system < 90:
-                    if not (attacker.type == 1 and def_sys == 2) or not (
-                            attacker.type == 2 and def_sys in (3, 4)) or not \
-                            (attacker.type == 3 and def_sys in (2, 3)):  # Systems without ammunition to decrease.
-                        self.systems[def_sys] -= 1
-                        if self.systems[def_sys] == 0:  # Removing system if empty.
-                            self.systems.pop(def_sys)
-                    probability -= random.randint(10 * -eq_systems[self.type][self.external][1] // 2,
-                                                  10 * -eq_systems[self.type][self.external][1])
-            if probability < 30:
-                return 2  # Miss return
-            else:
-                return probability
+        if target.defense(self, system) is None:
+            return None
         else:
-            return 1  # Malfunction return
+            return 1
 
-    def defense(self, unit, system, probability):
+    def defense(self, unit, system):
         """
         Function of hitting probability and decreasing unit status after hit.
-        :param probability:
         :param unit: Attacking vehicle.
         :param system: Attacking weapon system.
         """
-        critical = 3
-        if probability > 90:
-            critical = 4
-        damage = (eq_systems[unit.type][system][1] * (critical - 2)) - random.randint(-2, 1)
-        self.state -= damage
 
-        if self.state < 1:  # Asset destroyed.
-            self.state = 0
-            self.statename = self.set_state()
-            return 5, damage
+        if unit.reliability + random.randint(0, 50) > 45:  # Malfunction by reliability.
+            probability = self.countermeasures(unit, system)
+            self.hit_probability(unit, system, probability)
+            if self.statename == "Withdrawing":  # Retreat mechanics
+                self.distance += 2
+                if self.distance > 9:
+                    retreated.append(self)
+                    return None
+        else:  # Mafunction message
+            if system > 89 or unit.type == 3 and system == 1:
+                message.fail_gun(unit, system)
+            else:
+                message.fail_missile(unit, system)
+
+        if self.state <= 0:  # Asset destroyed.
+            message.kill(self, self.type)
+            return None
         else:
+            return 1
+
+    def countermeasures(self, unit, system):
+        """
+        Defending unit with countermeasures and its logic.
+        :param unit:
+        :param system:
+        """
+        probability = random.randint(0, 100)
+        for def_sys in self.systems.copy():
+            if eq_systems[self.type][def_sys][1] < 0 and system < 90:
+                if not (unit.type == 1 and def_sys == 2) or not (unit.type == 2 and def_sys in (3, 4)) or not \
+                        (unit.type == 3 and def_sys in (2, 3)):  # Systems that do not reduce due to no ammunition.
+                    self.systems[def_sys] -= 1
+                probability -= random.randint(10 * -eq_systems[self.type][self.external][1] // 2,
+                                              10 * -eq_systems[self.type][self.external][1])
+                if self.systems[def_sys] == 0:  # Removing system if empty.
+                    self.systems.pop(def_sys)
+        return probability
+
+    def hit_probability(self, unit, system, probability):
+        """
+        Calculates damage to targed based on hit probability.
+        :param unit:
+        :param unit:
+        :param system:
+        :param probability:
+        :return:
+        """
+        if probability <= 30:  # Miss
+            if system > 89 or (unit.type == 3 and system == 1):
+                return None, message.miss_gun(unit, system)
+            else:
+                return None, message.miss_missile(unit, system)
+
+        elif 31 <= probability <= 89:  # Normal hit
+            shot = eq_systems[unit.type][system][1] + random.randint(-2, 1)
+            if shot < 0:
+                shot = 0
+            self.state -= shot
             self.statename = self.set_state()
-        return critical, damage
+            return 1, message.hit(unit, self, system, shot)
+
+        elif 90 <= probability:  # Critical hit
+            critic = 2
+            self.state -= (eq_systems[unit.type][system][1] * critic) - random.randint(-2, 1)
+            self.statename = self.set_state()
+            return 2, message.critical(self, system)
 
 
 def battle_core(side_a, side_b):
@@ -467,39 +396,112 @@ def battle_core(side_a, side_b):
     :param side_b: Objects of side b.
     """
     turn = 0
-    print(f"Turn: {turn}\n{oob_listing(side_a + side_b, True, False, True, True, True)}\n")
+    # Message.message(0, default, headline="unknown")
     while len(side_b) > 0 and len(side_a) > 0:
         turn += 1
         clear()
+        message.battle_start()
+        message.report(f"Turn: {turn}")
+        result = battle_ws_by_distance(side_a, side_b)
+        print()
+        oob_listing(side_a + side_b, name=True, distance=True, status=True)
+        if result:
+            print("Nothing happened this in turn.")
+        input("\nPress Enter to continue.")
+        if notfound > 99:
+            break
 
-        for unit in (side_a + side_b).copy():
-            if unit.turn == turn:
-                result = unit.attack((side_a + side_b).copy(), side_a, side_b)
-                if result[0] == 5:
-                    if result[1].side == 1:
-                        for i in range(len(side_a)):
-                            if side_a[i] == result[1]:
-                                side_a.pop(i)
-                                break
-                    else:
-                        for i in range(len(side_b)):
-                            if side_b[i] == result[1]:
-                                side_b.pop(i)
-                                break
-        print(f"Turn: {turn}\n{oob_listing(side_a + side_b, name=True, status=True, distance=True)}\n")
-        input(f"Enter turn {turn + 1}:")
     clear()
-    print("The remaining units:")
-    oob_listing(side_a + side_b)
-    for i in retreated:
-        print(f"{i.name} {i.typename} retreated successfully.")
+    print("Remaining units: \n")
+    if notfound > 99:
+        print("Draw! Nothing to attack with units on both sides!")
+        print(f"Side 1 has won!\n{oob_listing(side_a + side_b, True, status=True)}")
+        input()
+        return
+    if len(side_a):
+        print(f"Side 1 has won!\n{oob_listing(side_a, True, status=True)}")
+    elif len(side_b):
+        print(f"Side 2 has won!\n{oob_listing(side_b, True, status=True)}")
+    else:
+        print("Draw!")
+    if len(retreated) != 0:
+        print(f"Retreated units: \n{oob_listing(retreated, name=True, status=True)}")
+    input()
+
+
+def battle_ws_by_distance(side_a, side_b):
+    """
+    Function launches attacks depending on distance between the groups.
+    :param side_a: Objects of side a.
+    :param side_b: Objects of side b.
+    :return: Returns nothing.
+    """
+    weapon_choice = 0
+    side_both = side_a + side_b
+    Message.report()
+    for unit in side_both:
+        weapon_choice = 0
+        for weapon in unit.systems.copy():
+            # TODO Add distance between craft limit instead of set limit
+            if eq_systems[unit.type][weapon][4] <= unit.distance <= eq_systems[unit.type][weapon][3]:
+                if not eq_systems[unit.type][weapon][4] < 0:
+                    weapon_choice = weapon
+
+        if weapon_choice and unit.side == 1:
+            battle_target_acquisition(side_b, unit, weapon_choice)
+        elif weapon_choice and unit.side == 2:
+            battle_target_acquisition(side_a, unit, weapon_choice)
+
+        if unit.distance > 1 and unit.statename != "Withdrawing":
+            unit.distance -= 1
+        unit.turn += 1
+    if not weapon_choice:
+        return 1
+    return 0
+
+
+def battle_target_acquisition(unit_list, unit, weapon):
+    """
+    Picks primary target depending on the vehicle type.
+    :param unit_list: Objects of side b.
+    :param unit: Object of side a attacking with weapon.
+    :param weapon: Object of side a weapon.
+    """
+    maximum = 0
+    target = False
+    acquisition = eq_systems[unit.type][weapon][2]
+    counter = 0
+    while counter < len(unit_list) * 3:
+        enemy = unit_list[random.randint(0, len(unit_list) - 1)]
+        try:
+            if acquisition == 4 and enemy.has_radar:
+                maximum = enemy.type
+                target = enemy
+                break
+            elif enemy.type in acquisition and enemy.type >= maximum:
+                maximum = enemy.type
+                target = enemy
+                counter += 1
+        except TypeError:
+            if enemy.type == acquisition and enemy.type >= maximum:
+                maximum = enemy.type
+                target = enemy
+                counter += 1
+
+    if unit.attack(weapon, target) is None:
+        for units in range(len(unit_list)):
+            if unit_list[units] == target:
+                unit_list.pop(units)
+                return
+    else:
+        pass
 
 
 # Eq System Category: {System: {Name str, dmg int, target int/tuple, range int, min range int}}
 vehicles = {
-    1: {1: ("MBT", (90, 1, 2, 3, 4, 5, 6, 7), 8), 2: ("AFV", (91, 1, 2, 3, 4, 5, 6, 7), 8),
-        3: ("IFV", (92, 1, 2, 3, 4, 5, 6), 6), 4: ("APC", (93, 1, 2, 3, 6), 4),
-        5: ("SAM", (94, 1, 2, 3, 6, 8, 9, 10), 4), 6: ("MLB", (95, 1, 2, 3, 6, 11, 12), 4)},
+    1: {1: ("MBT", (90, 1, 2, 3, 4), 8), 2: ("AFV", (91, 1, 2, 3, 4), 8), 3: ("IFV", (92, 1, 2, 3), 6),
+        4: ("APC", (93, 1, 2, 3), 4),
+        5: ("SAM", (94, 1, 2, 3, 5, 6, 7), 4), 6: ("MLB", (95, 1, 2, 3, 8, 9), 4)},
     2: {1: ("Small Multirole Aircraft", (90, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13), 4),
         2: ("Medium Multirole Aircraft", (91, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13), 6),
         3: ("Large Multirole Aircraft", (92, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13), 8),
@@ -549,13 +551,12 @@ def welcome():
     """
     Introducing welcome!
     """
-    version = "0.9.0"
+    version = "0.8.9"
     headline = f"Welcome to Battle System Manager v{version} (ALPHA)"
     print("=" * len(headline), "\n", headline, "\n", " " * ((len(headline) - 13) // 2), "Made by Toonu\n",
           " " * ((len(headline) - 21) // 2), "The Emperor of Iconia\n", " " * (len(headline) // 2), "☩\n",
-          " " * ((len(headline) - 5) // 2), "☩☩☩☩☩\n", " " * (len(headline) // 2), "☩\n",
-          " " * ((len(headline) - 37) // 2), "With the help of Red, Litz and Sleepy\n", " " * (len(headline) // 2),
-          "☩\n", "≋" * len(headline), "\n", sep="")
+          " " * ((len(headline) - 5) // 2), "☩☩☩☩☩\n", " " * (len(headline) // 2), "☩\n", "≋" * len(headline), "\n",
+          sep="")
 
 
 def oob_main(years=None):
@@ -723,9 +724,8 @@ def oob_cloning(a):
                         source_type = source_unit.type
                 for unit in a:
                     if unit.name == "asset" + target_unit and unit.type == source_type:
-                        for key, item in source_systems.items():
-                            unit.systems[key] = item
-
+                        unit.systems = source_systems.copy()
+                        unit.systems[vehicles[unit.type][unit.external][1][0]] = 1
                         for system in unit.systems.copy():
                             if system not in vehicles[unit.type][unit.external][1]:
                                 unit.systems.pop(system)
@@ -784,8 +784,8 @@ def oob_final(a, years):
         oob_listing(a, year=True)
         response = user_input(msg="\nIs everything correct? (1 YES / 0 NO): \nBattle will commence if yes: ")
         if not response:
-            wrong_system = user_input(1, 3, "What is wrong?\n1 | Unit composition"
-                                            "\n2 | Unit Equipment\n3 | Unit years\nYour input: ")
+            wrong_system = user_input(1, 3, "What is wrong?\n1 | Unit composition\n2 | Unit Equipment\n3 | Unit years"
+                                            "\nYour input: ")
             if wrong_system == 1:
                 oob_mod_asset_type(a, years)
             elif wrong_system == 2:
@@ -816,12 +816,12 @@ def oob_mod_asset_type(a, years):
                 if not isinstance(response, int) and unit.name == "asset" + response:
                     batch = oob_asset_configuration(unit.type, unit.side, unit.year, years)
                     unit.year = batch[2]
-                    unit.reliability = (unit.year - 1945) // 2
+                    unit.reliability = unit.year - 1900
                     unit.internal = unit.asset_assign(batch)
                     unit.typename = vehicles[batch[0]][batch[1]][0]
                     unit.external = batch[1]
                     unit.type = batch[0]
-                    unit.systems = unit.systems_ammo()
+                    unit.systems = {89 + unit.external: 1}
 
 
 def oob_mod_year(a, years):
