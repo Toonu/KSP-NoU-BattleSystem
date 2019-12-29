@@ -57,10 +57,8 @@ class Message:
         """
         Prints
         """
-        text = [f"{target.typename.lower()} {target.name} was hit with {unit.define_system(system)} fired from "
-                f"{unit.typename.lower()} {unit.name} with {damage} dmg.",
-                f"{target.typename.lower()} {target.name} was damaged by {unit.define_system(system)} fired "
-                f"from {unit.typename.lower()} {unit.name} with {damage} dmg."]
+        text = [f"{unit.typename.lower()} {unit.name} | {target.typename.lower()} {target.name} "
+                f"{unit.define_system(system)} with {damage} dmg."]
         if dot:
             self.dotted()
         print(text[random.randint(0, len(text) - 1)])
@@ -81,8 +79,8 @@ class Message:
         :param dot:
         :param system:
         """
-        text = [f"{unit.define_system(system)} missed the target.",
-                f"{unit.define_system(system)} is heading towards the sun now."]
+        text = [f"{unit.typename.lower()} {unit.name} | {unit.define_system(system)} missed the target.",
+                f"{unit.typename.lower()} {unit.name} | {unit.define_system(system)} is heading towards the sun now."]
         if dot:
             self.dotted()
         print(text[random.randint(0, len(text) - 1)])
@@ -94,9 +92,12 @@ class Message:
         :param dot:
         :param system:
         """
-        text = [f"{unit.define_system(system)} shots missed the target.",
+        text = [f"{unit.typename.lower()} {unit.name} | {unit.define_system(system)} shots missed the target.",
+                f"{unit.typename.lower()} {unit.name} | "
                 f"{unit.define_system(system)} FCS calculated the enemy speed with error and missed.",
+                f"{unit.typename.lower()} {unit.name} | "
                 f"{unit.typename} crew miscalculated the enemy movement and missed.",
+                f"{unit.typename.lower()} {unit.name} | "
                 f"{unit.define_system(system)} FCS error margin was too high.", "Missed the mark, trying again."]
         if dot:
             self.dotted()
@@ -107,15 +108,15 @@ class Message:
         Prints
         """
         text = {
-            1: [f"“Nailed em! The {unit.typename}’s finished.”", f"Lad’s a fireball now. ({unit.name})",
-                f"Scratch one, he's finished! ({unit.name})",
-                f"Target crew bailed out! ({unit.name})",
-                f"Our shot penetrated the enemy and destroyed everything inside. ({unit.name})",
-                f"The {unit.typename} has been utterly crushed by his foes. ({unit.name})",
-                f"{unit.typename.capitalize()} {unit.name} status: Presumed KIA.",
-                f"{unit.typename.capitalize()} {unit.name} killed in action.",
-                f"{unit.typename.capitalize()} {unit.name} disappeared from battle control screen.",
-                f"{unit.typename.capitalize()} {unit.name} couldn't stood against such strong enemy."],
+            1: [f"KILL “Nailed em! The {unit.typename}’s finished.”", f"Lad’s a fireball now. ({unit.name})",
+                f"KILL Scratch one, he's finished! ({unit.name})",
+                f"KILL Target crew bailed out! ({unit.name})",
+                f"KILL Our shot penetrated the enemy and destroyed everything inside. ({unit.name})",
+                f"KILL The {unit.typename} has been utterly crushed by his foes. ({unit.name})",
+                f"KILL {unit.typename.capitalize()} {unit.name} status: Presumed KIA.",
+                f"KILL {unit.typename.capitalize()} {unit.name} killed in action.",
+                f"KILL {unit.typename.capitalize()} {unit.name} disappeared from battle control screen.",
+                f"KILL {unit.typename.capitalize()} {unit.name} couldn't stood against such strong enemy."],
             2: [f"“Nailed em! The {unit.typename}’s finished.”", f"Lad’s a fireball now. ({unit.name})",
                 f"Pilot of the {unit.typename} knocked out. ({unit.name})",
                 f"Plane burnt down. ({unit.name})", f"Engine of {unit.typename} Died: Fuel Starvation ({unit.name})",
@@ -193,7 +194,7 @@ class Asset:
         self.side = side  # Fighting side
         self.year = batch[2]  # Year of origin
         self.reliability = (self.year - 1945) // 2  # Reliability of its WS
-        self.systems = {89 + self.external: 1}
+        self.systems = self.systems_ammo()
         self.distance = 11
         self.turn = 1
         self.has_radar = self.has_radar_fn()
@@ -201,23 +202,46 @@ class Asset:
     def __str__(self):
         return str(f"{self.name}_{self.typename}- State: {str(self.statename)}")
 
+    def systems_ammo(self):
+        """
+        Returns ammunition for specfied system
+        :return:
+        """
+        if self.type == 2:
+            return {89 + self.external: 10}
+        elif self.type == 3:
+            return {89 + self.external: 120}
+        elif self.type == 1 and self.external == 1:
+            return {89 + self.external: 45}
+        elif self.type == 1 and self.external in (2, 3):
+            return {89 + self.external: 120}
+        elif self.type == 1 and self.external == 4:
+            return {89 + self.external: 240}
+        elif self.type == 1:
+            return {89 + self.external: 80}
+
     def set_state(self):
         """
         Sets unit state name
         :return:
         """
-        if vehicles[self.type][self.external][2] == 4:
-            return state[self.state * 2]
-        elif vehicles[self.type][self.external][2] == 6:
-            return state[round(self.state * 1.25)]
-        elif vehicles[self.type][self.external][2] == 8:
-            return state[self.state]
-        elif vehicles[self.type][self.external][2] == 10:
-            return state[round(self.state / 1.25)]
-        elif vehicles[self.type][self.external][2] == 16:
-            return state[self.state // 2]
-        else:
-            return state[round(self.state / 2.5)]
+        result = 9
+        if vehicles[self.type][self.external][2] == 4 and self.state != 9:
+            result = state[self.state * 2]
+        elif vehicles[self.type][self.external][2] == 6 and self.state != 9:
+            result = state[round(self.state * 1.25)]
+        elif vehicles[self.type][self.external][2] == 8 and self.state != 9:
+            result = state[self.state]
+        elif vehicles[self.type][self.external][2] == 10 and self.state != 9:
+            result = state[round(self.state / 1.25)]
+        elif vehicles[self.type][self.external][2] == 16 and self.state != 9:
+            result = state[self.state // 2]
+        elif self.state != 9:
+            result = state[round(self.state / 2.5)]
+        if self.state < vehicles[self.type][self.external][2] // 2:
+            print(f"{self.name} {self.typename} withdrawing!")
+            result = state[9]
+        return result
 
     def add_system(self, system, amount):
         """
@@ -280,10 +304,10 @@ class Asset:
             print(f"{self} has no target to attack.")
             notfound += 1
             return
-        if not system >= 90:
-            self.systems[system] -= 1
-            if self.systems[system] == 0:
-                self.systems.pop(system)
+
+        self.systems[system] -= 1
+        if self.systems[system] == 0:
+            self.systems.pop(system)
 
         if target.defense(self, system) is None:
             return None
@@ -299,8 +323,12 @@ class Asset:
 
         if unit.reliability + random.randint(0, 50) > 45:  # Malfunction by reliability.
             probability = self.countermeasures(unit, system)
-            hit = self.hit_probability(unit, system, probability)
-
+            self.hit_probability(unit, system, probability)
+            if self.statename == "Withdrawing":  # Retreat mechanics
+                self.distance += 2
+                if self.distance > 9:
+                    retreated.append(self)
+                    return None
         else:  # Mafunction message
             if system > 89 or unit.type == 3 and system == 1:
                 message.fail_gun(unit, system)
@@ -375,6 +403,8 @@ def battle_core(side_a, side_b):
         message.battle_start()
         message.report(f"Turn: {turn}")
         result = battle_ws_by_distance(side_a, side_b)
+        print()
+        oob_listing(side_a + side_b, name=True, distance=True, status=True)
         if result:
             print("Nothing happened this in turn.")
         input("\nPress Enter to continue.")
@@ -382,9 +412,10 @@ def battle_core(side_a, side_b):
             break
 
     clear()
-    print("Remaining units: \n\n")
+    print("Remaining units: \n")
     if notfound > 99:
         print("Draw! Nothing to attack with units on both sides!")
+        print(f"Side 1 has won!\n{oob_listing(side_a + side_b, True, status=True)}")
         input()
         return
     if len(side_a):
@@ -393,6 +424,8 @@ def battle_core(side_a, side_b):
         print(f"Side 2 has won!\n{oob_listing(side_b, True, status=True)}")
     else:
         print("Draw!")
+    if len(retreated) != 0:
+        print(f"Retreated units: \n{oob_listing(retreated, name=True, status=True)}")
     input()
 
 
@@ -405,10 +438,11 @@ def battle_ws_by_distance(side_a, side_b):
     """
     weapon_choice = 0
     side_both = side_a + side_b
-    print(f"\n{oob_listing(side_a + side_b, name=True, distance=True, status=True)}\n")
+    Message.report()
     for unit in side_both:
         weapon_choice = 0
         for weapon in unit.systems.copy():
+            # TODO Add distance between craft limit instead of set limit
             if eq_systems[unit.type][weapon][4] <= unit.distance <= eq_systems[unit.type][weapon][3]:
                 if not eq_systems[unit.type][weapon][4] < 0:
                     weapon_choice = weapon
@@ -417,7 +451,8 @@ def battle_ws_by_distance(side_a, side_b):
             battle_target_acquisition(side_b, unit, weapon_choice)
         elif weapon_choice and unit.side == 2:
             battle_target_acquisition(side_a, unit, weapon_choice)
-        if unit.distance > 1:
+
+        if unit.distance > 1 and unit.statename != "Withdrawing":
             unit.distance -= 1
         unit.turn += 1
     if not weapon_choice:
@@ -432,29 +467,26 @@ def battle_target_acquisition(unit_list, unit, weapon):
     :param unit: Object of side a attacking with weapon.
     :param weapon: Object of side a weapon.
     """
-
-    # TODO Add also targeting by distance
     maximum = 0
-    distance = 10
     target = False
     acquisition = eq_systems[unit.type][weapon][2]
-
-    for enemy in unit_list:
+    counter = 0
+    while counter < len(unit_list) * 3:
+        enemy = unit_list[random.randint(0, len(unit_list) - 1)]
         try:
             if acquisition == 4 and enemy.has_radar:
                 maximum = enemy.type
-                distance = enemy.distance
                 target = enemy
-            elif enemy.type in acquisition and enemy.type > maximum:
+                break
+            elif enemy.type in acquisition and enemy.type >= maximum:
                 maximum = enemy.type
-                distance = enemy.distance
                 target = enemy
+                counter += 1
         except TypeError:
-            if enemy.type == acquisition and enemy.type > maximum:
+            if enemy.type == acquisition and enemy.type >= maximum:
                 maximum = enemy.type
-                distance = enemy.distance
-
                 target = enemy
+                counter += 1
 
     if unit.attack(weapon, target) is None:
         for units in range(len(unit_list)):
@@ -514,8 +546,6 @@ eq_systems = {
 state = ["KIA", "Heavily Damaged", "Major Damage taken", "Damaged", "Slightly damaged", "Scratched", "In nominal state",
          "Worried", "New", "Withdrawing", "unknown"]
 
-
-# TODO Add defense systems only against missiles etc
 
 def welcome():
     """
@@ -877,6 +907,7 @@ def start(bugs=False):
 
 default = Asset("default", [1, 1, 1999], 1)
 default.systems[1] = 2
+retreated = []
 
 message = Message()
 
