@@ -27,12 +27,15 @@ class Message:
         """
         Prints
         """
-        text = ["Contact was too slippery and the rounds bounced.", "Must have been poor luck, rounds haven't "
-                                                                    "penetrated.", "Shots lost the mark.",
-                "No penetration", "No good hits on the target.",
-                "Rounds haven't even scratched the enemy plates.", "Shot missed by a country mile.",
-                f"{unit.define_system(system_num)} failed to connect and couldn't have been fired.",
-                f"{unit.define_system(system_num)} malfunctioned."]
+        text = [f"{unit} | Contact was too slippery and the rounds bounced.",
+                f"{unit} | Must have been poor luck, rounds haven't penetrated.",
+                f"{unit} | Shots lost the mark.",
+                f"{unit} | No penetration",
+                f"{unit} | No good hits on the target.",
+                f"{unit} | Rounds haven't even scratched the enemy plates.",
+                f"{unit} | Shot missed by a country mile.",
+                f"{unit} | {unit.define_system(system_num)} failed to connect and couldn't have been fired.",
+                f"{unit} | {unit.define_system(system_num)} malfunctioned."]
         if dot:
             self.dotted()
         print(text[random.randint(0, len(text) - 1)])
@@ -41,14 +44,15 @@ class Message:
         """
         Prints
         """
-        text = [f"The {unit.define_system(system)} has failed to lock onto the target after launch.",
-                f"{unit.define_system(system)} has run out of fuel and auto destructed itself.",
-                f"{unit.define_system(system)} failed to lit its engine.",
-                f"{unit.define_system(system)} failed to connect and malfunctioned.",
-                "Enemy countermeasures were too much effective and misguided the "
-                f"{unit.define_system(system)} "
-                "into the surface.", f"{unit.define_system(system)} went and whiffed em’.",
-                "Failure to decouple.", "Failure to launch.."]
+        text = [f"{unit} | The {unit.define_system(system)} has failed to lock onto the target after launch.",
+                f"{unit} | {unit.define_system(system)} has run out of fuel and auto destructed itself.",
+                f"{unit} | {unit.define_system(system)} failed to lit its engine.",
+                f"{unit} | {unit.define_system(system)} failed to connect and malfunctioned.",
+                f"{unit} | Enemy countermeasures were too much effective and misguided the "
+                f"{unit.define_system(system)} into the surface.",
+                f"{unit} | {unit.define_system(system)} went and whiffed em’.",
+                f"{unit} | Failure to decouple.",
+                f"{unit} | Failure to launch.."]
         if dot:
             self.dotted()
         print(text[random.randint(0, len(text) - 1)])
@@ -57,7 +61,7 @@ class Message:
         """
         Prints
         """
-        text = [f"{unit.typename.lower()} {unit.name} > {target.typename.lower()} {target.name} "
+        text = [f"{unit.name} | >>> {target.typename.lower()} {target.name} using "
                 f"{unit.define_system(system)} with {damage} dmg."]
         if dot:
             self.dotted()
@@ -79,8 +83,8 @@ class Message:
         :param dot:
         :param system:
         """
-        text = [f"{unit.typename.lower()} {unit.name} | {unit.define_system(system)} missed the target.",
-                f"{unit.typename.lower()} {unit.name} | {unit.define_system(system)} is heading towards the sun now."]
+        text = [f"{unit} | {unit.define_system(system)} missed the target.",
+                f"{unit} | {unit.define_system(system)} is heading towards the sun now."]
         if dot:
             self.dotted()
         print(text[random.randint(0, len(text) - 1)])
@@ -92,13 +96,11 @@ class Message:
         :param dot:
         :param system:
         """
-        text = [f"{unit.typename.lower()} {unit.name} | {unit.define_system(system)} shots missed the target.",
-                f"{unit.typename.lower()} {unit.name} | "
-                f"{unit.define_system(system)} FCS calculated the enemy speed with error and missed.",
-                f"{unit.typename.lower()} {unit.name} | "
-                f"{unit.typename} crew miscalculated the enemy movement and missed.",
-                f"{unit.typename.lower()} {unit.name} | "
-                f"{unit.define_system(system)} FCS error margin was too high.", "Missed the mark, trying again."]
+        text = [f"{unit} | {unit.define_system(system)} shots missed the target.",
+                f"{unit} | {unit.define_system(system)} FCS calculated the enemy speed with error and missed.",
+                f"{unit} | {unit.typename} crew miscalculated the enemy movement and missed.",
+                f"{unit} | {unit.define_system(system)} FCS error margin was too high.",
+                f"{unit} | Missed the mark, trying again."]
         if dot:
             self.dotted()
         print(text[random.randint(0, len(text) - 1)])
@@ -108,38 +110,43 @@ class Message:
         Prints
         """
         text = {
-            1: [f"KILL “Nailed em! The {unit.typename}’s finished.”", f"Lad’s a fireball now. ({unit.name})",
-                f"KILL Scratch one, he's finished! ({unit.name})",
-                f"KILL Target crew bailed out! ({unit.name})",
-                f"KILL Our shot penetrated the enemy and destroyed everything inside. ({unit.name})",
-                f"KILL The {unit.typename} has been utterly crushed by his foes. ({unit.name})",
-                f"KILL {unit.typename.capitalize()} {unit.name} status: Presumed KIA.",
-                f"KILL {unit.typename.capitalize()} {unit.name} killed in action.",
-                f"KILL {unit.typename.capitalize()} {unit.name} disappeared from battle control screen.",
-                f"KILL {unit.typename.capitalize()} {unit.name} couldn't stood against such strong enemy."],
-            2: [f"KILL “Nailed em! The {unit.typename}’s finished.”", f"KILL Lad’s a fireball now. ({unit.name})",
-                f"KILL Pilot of the {unit.typename} knocked out. ({unit.name})",
-                f"KILL Plane burnt down. ({unit.name})",
-                f"KILL Engine of {unit.typename} Died: Fuel Starvation ({unit.name})",
-                f"KILL Bandit down, no chute to be seen. ({unit.name})",
-                f"KILL {unit.typename.capitalize()} {unit.name} status: Presumed KIA.",
-                f"KILL {unit.typename.capitalize()} {unit.name} disappeared from battle control screen.",
-                f"KILL {unit.typename.capitalize()} {unit.name} killed in action.",
-                f"KILL {unit.typename.capitalize()} {unit.name} couldn't stood against such strong enemy."],
-            3: [f"KILL “Nailed em! The {unit.typename}’s finished.”", f"KILL Enemy is sinking. ({unit.name})",
-                f"KILL Scratch one {unit.typename}! ({unit.name})",
-                f"KILL Enemy has huge hole in his hull! ({unit.name})",
-                f"KILL Target {unit.typename} is taking water and abandoning the ship was ordered! ({unit.name})",
-                f"KILL They’ve gone to the Krusty Krab and never returned. ({unit.name})",
-                f"KILL They’re going under, we got em! ({unit.name})",
-                f"KILL The target {unit.typename} has achieved Salvation, by force. ({unit.name})",
-                f"KILL May Neptune have mercy on them. ({unit.name})",
-                f"KILL She got shoved into Davy Jones’ locker by the Sea Chad. ({unit.name})",
-                f"KILL “Something something crisp white sheets.” ({unit.name})",
-                f"KILL {unit.typename.capitalize()} {unit.name} status: Presumed KIA.",
-                f"KILL {unit.typename.capitalize()} {unit.name} killed in action.",
-                f"KILL {unit.typename.capitalize()} {unit.name} disappeared from battle control screen.",
-                f"KILL {unit.typename.capitalize()} {unit.name} couldn't stood against such strong enemy."]}
+            1: [f"KILL {unit} | “Nailed em! The {unit.typename}’s finished.”",
+                f"KILL {unit} | Lad’s a fireball now. ({unit.name})",
+                f"KILL {unit} | Scratch one, he's finished! ({unit.name})",
+                f"KILL {unit} | Target crew bailed out! ({unit.name})",
+                f"KILL {unit} | Our shot penetrated the enemy and destroyed everything inside. ({unit.name})",
+                f"KILL {unit} | The {unit.typename} has been utterly crushed by his foes. ({unit.name})",
+                f"KILL {unit} | {unit.typename.capitalize()} {unit.name} status: Presumed KIA.",
+                f"KILL {unit} | {unit.typename.capitalize()} {unit.name} killed in action.",
+                f"KILL {unit} | {unit.typename.capitalize()} {unit.name} disappeared from battle control screen.",
+                f"KILL {unit} | {unit.typename.capitalize()} {unit.name} couldn't stood against such strong enemy."],
+            2: [f"KILL {unit} | “Nailed em! The {unit.typename}’s finished.”",
+                f"KILL {unit} | Lad’s a fireball now. ({unit.name})",
+                f"KILL {unit} | Pilot of the {unit.typename} knocked out. ({unit.name})",
+                f"KILL {unit} | Plane burnt down. ({unit.name})",
+                f"KILL {unit} | Engine of {unit.typename} Died: Fuel Starvation ({unit.name})",
+                f"KILL {unit} | Bandit down, no chute to be seen. ({unit.name})",
+                f"KILL {unit} | {unit.typename.capitalize()} {unit.name} status: Presumed KIA.",
+                f"KILL {unit} | {unit.typename.capitalize()} {unit.name} disappeared from battle control screen.",
+                f"KILL {unit} | {unit.typename.capitalize()} {unit.name} killed in action.",
+                f"KILL {unit} | {unit.typename.capitalize()} {unit.name} couldn't stood against such strong enemy."
+                ],
+            3: [f"KILL {unit} | “Nailed em! The {unit.typename}’s finished.”",
+                f"KILL {unit} | Enemy is sinking. ({unit.name})",
+                f"KILL {unit} | Scratch one {unit.typename}! ({unit.name})",
+                f"KILL {unit} | Enemy has huge hole in his hull! ({unit.name})",
+                f"KILL {unit} | Target {unit.typename} is taking water and abandoning the ship was ordered! "
+                f"KILL {unit} | They’ve gone to the Krusty Krab and never returned. ({unit.name})",
+                f"KILL {unit} | They’re going under, we got em! ({unit.name})",
+                f"KILL {unit} | The target {unit.typename} has achieved Salvation, by force. ({unit.name})",
+                f"KILL {unit} | May Neptune have mercy on them. ({unit.name})",
+                f"KILL {unit} | She got shoved into Davy Jones’ locker by the Sea Chad. ({unit.name})",
+                f"KILL {unit} | “Something something crisp white sheets.” ({unit.name})",
+                f"KILL {unit} | {unit.typename.capitalize()} {unit.name} status: Presumed KIA.",
+                f"KILL {unit} | {unit.typename.capitalize()} {unit.name} killed in action.",
+                f"KILL {unit} | {unit.typename.capitalize()} {unit.name} disappeared from battle control screen.",
+                f"KILL {unit} | {unit.typename.capitalize()} {unit.name} couldn't stood against such strong enemy."
+                ]}
         if dot:
             self.dotted()
         print(text[unit.type][random.randint(0, len(text) - 1)])
@@ -148,9 +155,11 @@ class Message:
         """
         Prints
         """
-        text = ["Critical hit!", "The enemy has been hit precisely into weakspot!", "Devastating blow!",
-                f"The {unit.typename} {unit.name} has been hit precisely into weakspot!",
-                f"{unit.define_system(system)} critically hit the enemy"]
+        text = [f"{unit} | Critical hit!",
+                f"{unit} | The enemy has been hit precisely into weakspot!",
+                f"{unit} | Devastating blow!",
+                f"{unit} | The {unit.typename} {unit.name} has been hit precisely into weakspot!",
+                f"{unit} | {unit.define_system(system)} critically hit the enemy"]
         if dot:
             self.dotted()
         print(text[random.randint(0, len(text) - 1)])
@@ -201,9 +210,13 @@ class Asset:
         self.has_radar = self.has_radar_fn()
 
     def __str__(self):
-        return str(f"{self.name}_{self.typename} - State: {str(self.statename)}")
+        return str(f"{self.name}_{self.typename} - State: {str(self.statename)} | Dist: {self.distance}")
 
     def distance_per_side(self):
+        """
+        Distance
+        :return:
+        """
         if self.side == 1:
             return 6
         else:
@@ -299,23 +312,30 @@ class Asset:
             result = asset_type[1] + len(vehicles[1]) + len(vehicles[2])
         return result
 
-    def attack(self, sides, side_a, side_b):
+    def attack(self, side_a, side_b):
         """
 
+        :param side_b:
+        :param side_a:
         :param sides:
         :return: Returns None if nothing could have been attacked, if something was attacked, returns
         """
         attack_result = (0, 0), 0
-        maximum = 0
-        best_system = 0
+        target = 0
         cont = False
-        while True:
-            target = sides.copy()[random.randint(0, len(sides.copy()) - 1)]
+        while len(side_b) > 0 and len(side_a) > 0:
+            target = (side_a + side_b)[random.randint(0, len(side_a + side_b) - 1)]
+            if self.systems is None:
+                self.statename = "Withdrawing"
             if target.side != self.side:
+                maximum = 0
+                best_system = 0
                 for system in self.systems:
+                    cont = False
                     try:
-                        if target.has_radar and eq_systems[self.type][system][3] >= \
-                                abs(self.distance - target.distance) >= eq_systems[self.type][system][4]:
+                        if target.has_radar and eq_systems[self.type][system][2] == 4 and \
+                                eq_systems[self.type][system][3] >= abs(self.distance - target.distance) >= \
+                                eq_systems[self.type][system][4]:
                             cont = True
                         elif target.type in eq_systems[self.type][system][2] and eq_systems[self.type][system][3] >= \
                                 abs(self.distance - target.distance) >= eq_systems[self.type][system][4]:
@@ -324,7 +344,7 @@ class Asset:
                         if eq_systems[self.type][system][2] == target.type and eq_systems[self.type][system][3] >= \
                                 abs(self.distance - target.distance) >= eq_systems[self.type][system][4]:
                             cont = True
-                    if eq_systems[self.type][system][1] > maximum:  # getting max damage weapon
+                    if cont and eq_systems[self.type][system][1] > maximum:  # getting max damage weapon
                         maximum = eq_systems[self.type][system][1]
                         best_system = system
                 if cont:
@@ -352,39 +372,27 @@ class Asset:
                 global retreated
                 retreated.append(self)
                 return 5, self
+        if self.side == 1 and self.pursue(side_b) and self.distance < -9:
+            self.distance -= 2
+        elif self.side == 2 and self.pursue(side_a) and self.distance > 9:
+            self.distance += 2
         elif self.distance > 0 and self.side == 1:
             self.distance -= 1
         elif self.distance < 0 and self.side == 2:
             self.distance += 1
-        pursue = self.pursue(side_a, side_b)
-        if self.side == 1 and pursue[1]:
-            self.distance -= 2
-        elif self.side == 2 and pursue[0]:
-            self.distance += 2
 
         return attack_result[0], target
 
     @staticmethod
-    def pursue(side_a, side_b):
+    def pursue(side):
         """
-
-        :param side_a:
-        :param side_b:
         :return:
         """
-        pursue_a = False
-        pursue_b = False
-        for a in side_a:
-            if a.statename == "Withdrawing":
-                pursue_b = True
-            else:
-                pursue_b = False
-        for b in side_b:
-            if b.statename == "Withdrawing":
-                pursue_a = True
-            else:
-                pursue_a = False
-        return pursue_a, pursue_b
+        pursue = True
+        for a in side:
+            if a.statename != "Withdrawing":
+                pursue = False
+        return pursue
 
     def failure(self, system, fail, target, damage=0):
         """
@@ -467,14 +475,14 @@ def battle_core(side_a, side_b):
     :param side_b: Objects of side b.
     """
     turn = 0
-    print(f"Turn: {turn}\n{oob_listing(side_a + side_b, True, False, True, True, True)}\n")
+    print(f"Turn: {turn}\n{oob_listing(side_a + side_b, name=True, status=True, distance=True)}\n")
     while len(side_b) > 0 and len(side_a) > 0:
         turn += 1
         clear()
 
         for unit in (side_a + side_b).copy():
             if unit.turn == turn:
-                result = unit.attack((side_a + side_b).copy(), side_a, side_b)
+                result = unit.attack(side_a, side_b)
                 if result[0] == 5:
                     if result[1].side == 1:
                         for i in range(len(side_a)):
@@ -488,11 +496,23 @@ def battle_core(side_a, side_b):
                                 break
         print(f"Turn: {turn}\n{oob_listing(side_a + side_b, name=True, status=True, distance=True)}\n")
         input(f"Enter turn {turn + 1}:")
+    finalize(side_a, side_b)
+
+
+def finalize(side_a, side_b):
+    """
+    Ending
+    :param side_a:
+    :param side_b:
+    """
     clear()
-    print("The remaining units:")
+    message.report("Finalizing report")
+    print("\nThe remaining units:")
     oob_listing(side_a + side_b)
     for i in retreated:
         print(f"{i.name} {i.typename} retreated successfully.")
+    print("\nThe battle has ended with this results. Stay strong! Long live the Emperor!")
+    message.ending()
 
 
 # Eq System Category: {System: {Name str, dmg int, target int/tuple, range int, min range int}}
@@ -549,7 +569,7 @@ def welcome():
     """
     Introducing welcome!
     """
-    version = "0.9.0"
+    version = "0.9.2"
     headline = f"Welcome to Battle System Manager v{version} (ALPHA)"
     print("=" * len(headline), "\n", headline, "\n", " " * ((len(headline) - 13) // 2), "Made by Toonu\n",
           " " * ((len(headline) - 21) // 2), "The Emperor of Iconia\n", " " * (len(headline) // 2), "☩\n",
