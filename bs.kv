@@ -1,10 +1,6 @@
 <Interface>
-    PageLayout:
-    font_size: app.font_size
-    orientation: 'vertical'
     BoxLayout:
         orientation: 'vertical'
-        size_hint_y: 5
         Image:
             id: image
             source: 'IS.ico'
@@ -17,93 +13,95 @@
                 id: image
                 source: 'Air.png'
                 size: self.texture_size
-                size_hint_y: 1
+                size_hint_x: 1
             Label:
                 id: welcome_label
-                size_hint_y: 1
                 haling: "center"
                 valign: "center"
-                text: app.welcome_message
+                text: str(root.welcome_message)
+                size_hint_x: 3
             Image:
                 id: image
                 source: 'Navy.png'
                 size: self.texture_size
-                size_hint_y: 1
-    GridLayout:
-        height: 50
-        size_hint_y: None
-        cols:4
-        Widget:
-            size_hint_x: 1
-        Label:
-            text: app.years[2]
-            text_size: self.size
-            halign: "right"
-            valign: "center"
-            size_hint_x: 2
-        TextInput:
-            id: years_text_input
-            size_hint_x: 2
-            halign: "center"
-            on_text: app.user_input_ui(years_text_input, years_text_input_result, app.years[0], app.years[1])
-            multiline: False
-        Label:
-            id: years_text_input_result
-            size_hint_x: 1
-    GridLayout:
-        height: 50
-        size_hint_y: None
-        cols:4
-        Widget:
-            size_hint_x: 1
-        Label:
-            text: "Side 1: "
-            text_size: self.size
-            halign: "right"
-            valign: "center"
-            size_hint_x: 3
-        TextInput:
-            id: side_1
-            size_hint_x: 1
-            halign: "center"
-            multiline: False
-            on_text: app.user_input_ui(side_1, side_1_result, 1, 99)
-        Label:
-            id: side_1_result
-            size_hint_x: 1
-    GridLayout:
-        height: 50
-        size_hint_y: None
-        cols:4
-        Widget:
-            size_hint_x: 1
-        Label:
-            text: "Side 2: "
-            text_size: self.size
-            halign: "right"
-            valign: "center"
-            size_hint_x: 3
-        TextInput:
-            id: side_2
-            size_hint_x: 1
-            multiline: False
-            halign: "center"
-            on_text: app.user_input_ui(side_2, side_2_result, 1, 99)
-        Label:
-            id: side_2_result
-            size_hint_x: 1
-    GridLayout:
-        height: 50
-        size_hint_y: None
-        cols:3
-        Label:
-            size_hint_x: 1
-        Button:
-            id: confirm
-            text: "Finish"
-            # on_state: print("my current state is {}".format(self.state))
-            # on_press: self.background_down = "True"
-            on_release: app.oob_battle_configuration(years_text_input, side_1, side_2, app.years)
-            size_hint_x: 4
-        Label:
-            size_hint_x: 1
+                size_hint_x: 1
+        GridLayout:
+            height: 50
+            cols:4
+            size_hint_y: None
+            Widget:
+                size_hint_x: 1
+            Label:
+                text: f"Specify default battle year {root.years[0]} - {root.years[1]}"
+                text_size: self.size
+                halign: "right"
+                valign: "center"
+                size_hint_x: 2
+            TextInput:
+                id: years_text_input
+                halign: "center"
+                multiline: False
+                on_text:
+                    app.align_text(self)
+                size_hint_x: 2
+            Label:
+                id: years_text_input_result
+                size_hint_x: 1
+        GridLayout:
+            height: 50
+            cols:4
+            size_hint_y: None
+            Widget:
+                size_hint_x: 1
+            Label:
+                text: "Side 1: "
+                text_size: self.size
+                halign: "right"
+                valign: "center"
+                size_hint_x: 3
+            TextInput:
+                id: side_1
+                halign: "center"
+                multiline: False
+                on_text:
+                    app.align_text(self)
+                size_hint_x: 1
+            Label:
+                id: side_1_result
+                size_hint_x: 1
+        GridLayout:
+            height: 50
+            cols:4
+            size_hint_y: None
+            Widget:
+                size_hint_x: 1
+            Label:
+                text: "Side 2: "
+                text_size: self.size
+                halign: "right"
+                valign: "center"
+                size_hint_x: 3
+            TextInput:
+                id: side_2
+                multiline: False
+                halign: "center"
+                on_text:
+                    app.align_text(self)
+                size_hint_x: 1
+            Label:
+                id: side_2_result
+                size_hint_x: 1
+        GridLayout:
+            height: 50
+            cols:3
+            size_hint_y: None
+            Label:
+                size_hint_x: 1
+            Button:
+                id: confirm
+                text: "Finish"
+                # on_state: print("my current state is {}".format(self.state))
+                # on_press: self.background_down = "True"
+                size_hint_x: 4
+            Label:
+                size_hint_x: 1

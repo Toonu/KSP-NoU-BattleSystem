@@ -317,7 +317,6 @@ class Asset:
 
         :param side_b:
         :param side_a:
-        :param sides:
         :return: Returns None if nothing could have been attacked, if something was attacked, returns
         """
         attack_result = (0, 0), 0
@@ -547,7 +546,7 @@ eq_systems = {
         95: ("crew handheld firearms", 1, 1, 1, 0)},
     2: {1: ("Flares", -2, 0, 0, 0), 2: ("Chaff", -2, 0, 0, 0), 3: ("ECM", -2, 0, 0, 0),
         4: ("EWS", -3, 0, 0, 0), 5: ("SRAAM", 4, 2, 2, 0), 6: ("MRAAM", 4, 2, 4, 0), 7: ("LRAAM", 4, 2, 12, 3),
-        8: ("AGM", 4, 1, 3, 0), 9: ("MR-AShM", 5, 3, 4, 0), 10: ("SEAD", 5, 4, 4, 0),
+        8: ("AGM", 4, 1, 3, 0), 9: ("MR-AShM", 5, 3, 4, 0), 10: ("SEAD", 5, 6, 4, 0),
         11: ("Cruise Missile", 3, 1, 5, 0), 12: ("Bomb", 2, 1, 1, 0), 13: ("GBU", 4, 1, 1, 0),
         90: ("coaxial cannon", 1, (1, 2), 1, 0), 91: ("coaxial cannon", 2, (1, 2), 1, 0),
         92: ("coaxial cannon", 2, (1, 2), 1, 0), 93: ("defense turrets", 1, 2, 1, 0),
@@ -569,7 +568,7 @@ def welcome():
     """
     Introducing welcome!
     """
-    version = "0.9.2"
+    version = "0.9.5"
     headline = f"Welcome to Battle System Manager v{version} (ALPHA)"
     print("=" * len(headline), "\n", headline, "\n", " " * ((len(headline) - 13) // 2), "Made by Toonu\n",
           " " * ((len(headline) - 21) // 2), "The Emperor of Iconia\n", " " * (len(headline) // 2), "☩\n",
