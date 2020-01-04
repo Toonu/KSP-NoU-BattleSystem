@@ -1,3 +1,9 @@
 <component name="ProjectDictionaryState">
-  <dictionary name="Toonu" />
+  <dictionary name="Toonu">
+    <words>
+      <w>halign</w>
+      <w>multiline</w>
+      <w>valign</w>
+    </words>
+  </dictionary>
 </component>

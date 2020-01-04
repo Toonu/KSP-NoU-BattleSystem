@@ -6,6 +6,12 @@ by Toonu
 import random
 import time
 
+# TODO
+"""
+Add ceountermeasure system overwhelm by adding them 0 effectivity if they was attacked 
+already in that turn, then reset the value.
+"""
+
 
 class Message:
     """
