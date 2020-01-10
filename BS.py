@@ -10,6 +10,11 @@ import time
 """
 Add ceountermeasure system overwhelm by adding them 0 effectivity if they was attacked 
 already in that turn, then reset the value.
+
+Add fuel tank to reduce combat effectivness
+
+
+Add ship SRSAM as both defensive and attacking weapon
 """
 
 
@@ -349,9 +354,12 @@ class Asset:
                         if eq_systems[self.type][system][2] == target.type and eq_systems[self.type][system][3] >= \
                                 abs(self.distance - target.distance) >= eq_systems[self.type][system][4]:
                             cont = True
-                    if cont and eq_systems[self.type][system][1] > maximum:  # getting max damage weapon
-                        maximum = eq_systems[self.type][system][1]
-                        best_system = system
+                    try:
+                        if cont and eq_systems[self.type][system][1] > maximum:  # getting max damage weapon
+                            maximum = eq_systems[self.type][system][1]
+                            best_system = system
+                    except:
+                        pass
                 if cont:
                     self.systems[best_system] -= 1
                     if self.systems[best_system] <= 0:
@@ -546,25 +554,27 @@ vehicles_internal = {1: "MBT", 2: "AFV", 3: "IFV", 4: "APC", 5: "SAM", 6: "MLB",
 eq_systems = {
     1: {1: ("Smoke", -2, 0, 0, 0), 2: ("SK-APS", -3, 0, 0, 0), 3: ("HK-APS", -4, 0, 0, 0), 4: ("ERA", -6, 0, 0, 0),
         5: ("NxRA", -8, 0, 0, 0), 6: ("Applique", -3, 0, 0, 0), 7: ("ATGM", 4, (1, 3), 3, 0),
-        8: ("SR-SAM", 3, 2, 2, 0), 9: ("MR-SAM", 3, 2, 4, 0), 10: ("LR-SAM", 3, 2, 12, 3), 11: ("MR-AShM", 5, 3, 4, 0),
-        12: ("LR-AShM", 5, 3, 6, 0), 90: ("tank gun", 5, 1, 2, 0), 91: ("autocannon", 2, (1, 2), 2, 0),
-        92: ("heavy MG", 1, (1, 2), 2, 0), 93: ("light MG", 1, 1, 1, 0), 94: ("crew handheld firearms", 1, 1, 1, 0),
-        95: ("crew handheld firearms", 1, 1, 1, 0)},
+        8: ("SR-SAM", 3, 2, 3, 0), 9: ("MR-SAM", 3, 2, 6, 0), 10: ("LR-SAM", 3, 2, 10, 3), 11: ("MR-AShM", 5, 3, 4, 0),
+        12: ("LR-AShM", 5, 3, 6, 0), 13: ("Heavy MG Turet", 1, 2, 1, 0), 14: ("Autocannon Turret", 2, 2, 1, 0),
+        90: ("Tank gun", 5, 1, 2, 0), 91: ("Autocannon", 2, (1, 2), 2, 0),
+        92: ("Heavy MG", 1, (1, 2), 2, 0), 93: ("Light MG", 1, 1, 1, 0), 94: ("Crew Handheld Firearms", 1, 1, 1, 0),
+        95: ("Crew Handheld Firearms", 1, 1, 1, 0)},
     2: {1: ("Flares", -2, 0, 0, 0), 2: ("Chaff", -2, 0, 0, 0), 3: ("ECM", -2, 0, 0, 0),
         4: ("EWS", -3, 0, 0, 0), 5: ("SRAAM", 4, 2, 2, 0), 6: ("MRAAM", 4, 2, 4, 0), 7: ("LRAAM", 4, 2, 12, 3),
         8: ("AGM", 4, 1, 3, 0), 9: ("MR-AShM", 5, 3, 4, 0), 10: ("SEAD", 5, 6, 4, 0),
         11: ("Cruise Missile", 3, 1, 5, 0), 12: ("Bomb", 2, 1, 1, 0), 13: ("GBU", 4, 1, 1, 0),
-        90: ("coaxial cannon", 1, (1, 2), 1, 0), 91: ("coaxial cannon", 2, (1, 2), 1, 0),
-        92: ("coaxial cannon", 2, (1, 2), 1, 0), 93: ("defense turrets", 1, 2, 1, 0),
-        94: ("defense turrets", 1, 2, 1, 0)},
-    3: {1: ("CIWS", -5, 2, 2, 0), 2: ("DEW", -7, 2, 2, 0), 3: ("ECM", -2, 0, 0, 0),
-        4: ("Smoke", -2, 0, 0, 0), 5: ("Chaff", -2, 0, 0, 0), 6: ("SR-SAM", 3, 2, 2, 0), 7: ("MR-SAM", 3, 2, 4, 0),
-        8: ("LR-SAM", 3, 2, 12, 3), 9: ("MR-AShM", 5, 3, 4, 0), 10: ("LR-AShM", 5, 3, 6, 0),
-        11: ("Cruise Missile", 3, 1, 5, 0), 90: ("main battery", 1, (1, 2, 3), 1, 0),
-        91: ("main battery", 1, (1, 2, 3), 1, 0), 92: ("main battery", 1, (1, 2, 3), 1, 0),
-        93: ("main battery", 1, (1, 2, 3), 2, 0), 94: ("main battery", 1, (1, 2, 3), 3, 0),
-        95: ("main battery", 1, (1, 2, 3), 4, 0), 96: ("auxiliary weapons", 1, (2, 3), 1, 0),
-        97: ("auxiliary weapons", 1, (2, 3), 1, 0)}
+        14: ("Drop Tank", 0, 0, 0, 0),
+        90: ("Autocannon", 1, (1, 2), 1, 0), 91: ("Autocannon", 2, (1, 2), 1, 0),
+        92: ("Autocannon", 2, (1, 2), 1, 0), 93: ("Defense Turrets", 1, 2, 1, 0),
+        94: ("Defense Turrets", 1, 2, 1, 0)},
+    3: {1: ("CIWS", -1, 2, 2, 0), 2: ("DEW", -5, 2, 2, 0), 3: ("ECM", -1, 0, 0, 0),
+        4: ("Smoke", -2, 0, 0, 0), 5: ("Chaff", -2, 0, 0, 0), 6: ("SR-SAM", 3, 2, 3, 0), 7: ("MR-SAM", 3, 2, 6, 0),
+        8: ("LR-SAM", 3, 2, 10, 3), 9: ("MR-AShM", 5, 3, 4, 0), 10: ("LR-AShM", 5, 3, 6, 0),
+        11: ("Cruise Missile", 3, 1, 5, 0), 90: ("Main Battery", 1, (1, 2, 3), 1, 0),
+        91: ("Main Battery", 1, (1, 2, 3), 1, 0), 92: ("Main Battery", 1, (1, 2, 3), 1, 0),
+        93: ("Main Battery", 1, (1, 2, 3), 2, 0), 94: ("Main Battery", 1, (1, 2, 3), 3, 0),
+        95: ("Main Battery", 1, (1, 2, 3), 4, 0), 96: ("Auxiliary Weapons", 1, (2, 3), 1, 0),
+        97: ("Auxiliary Weapons", 1, (2, 3), 1, 0)}
 }
 state = ["KIA", "Heavily Damaged", "Major Damage taken", "Damaged", "Slightly damaged", "Scratched", "In nominal state",
          "Worried", "New", "Withdrawing", "unknown"]
@@ -574,7 +584,7 @@ def welcome():
     """
     Introducing welcome!
     """
-    version = "0.9.5"
+    version = "0.9.6"
     headline = f"Welcome to Battle System Manager v{version} (ALPHA)"
     print("=" * len(headline), "\n", headline, "\n", " " * ((len(headline) - 13) // 2), "Made by Toonu\n",
           " " * ((len(headline) - 21) // 2), "The Emperor of Iconia\n", " " * (len(headline) // 2), "☩\n",
