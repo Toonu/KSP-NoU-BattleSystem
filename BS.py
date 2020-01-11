@@ -8,7 +8,7 @@ import time
 
 # TODO
 """
-Add ceountermeasure system overwhelm by adding them 0 effectivity if they was attacked 
+Add countermeasure system overwhelm by adding them 0 effect if they was attacked 
 already in that turn, then reset the value.
 """
 
@@ -40,7 +40,7 @@ class Message:
                 f"{unit} | No good hits on the target.",
                 f"{unit} | Rounds haven't even scratched the enemy plates.",
                 f"{unit} | Shot missed by a country mile.",
-                f"{unit} | {unit.define_system(system_num)} failed to connect and couldn't have been fired.",
+                f"{unit} | {unit.define_system(system_num)} failed to connect and could not have been fired.",
                 f"{unit} | {unit.define_system(system_num)} malfunctioned."]
         if dot:
             self.dotted()
@@ -230,7 +230,7 @@ class Asset:
 
     def systems_ammo(self):
         """
-        Returns ammunition for specfied system
+        Returns ammunition for specified system
         :return:
         """
         if self.type == 2:
@@ -267,7 +267,6 @@ class Asset:
         if not finals and self.state < vehicles[self.type][self.external][2] // 2:
             result = state[9]
         return result
-
 
     def add_system(self, system, amount):
         """
@@ -415,7 +414,7 @@ class Asset:
         :param system:
         :param fail:
         """
-        if fail == 1:  # Mafunction message
+        if fail == 1:  # Malfunction message
             if system > 89 or self.type == 3 and system == 1:
                 message.fail_gun(self, system)
             else:
@@ -574,7 +573,7 @@ eq_systems = {
     1: {1: ("Smoke", 2, 9, 0, 0), 2: ("SK-APS", 3, 8, 0, 0), 3: ("HK-APS", 4, 9, 0, 0), 4: ("ERA", 6, 9, 0, 0),
         5: ("NxRA", 8, 9, 0, 0), 6: ("Applique", 3, 9, 0, 0), 7: ("ATGM", 4, (1, 3), 3, 0),
         8: ("SR-SAM", 3, 2, 3, 0), 9: ("MR-SAM", 3, 2, 6, 0), 10: ("LR-SAM", 3, 2, 10, 3), 11: ("MR-AShM", 5, 3, 4, 0),
-        12: ("LR-AShM", 5, 3, 6, 0), 13: ("Heavy MG Turet", 1, 2, 1, 0), 14: ("Autocannon Turret", 2, 2, 1, 0),
+        12: ("LR-AShM", 5, 3, 6, 0), 13: ("Heavy MG Turret", 1, 2, 1, 0), 14: ("Autocannon Turret", 2, 2, 1, 0),
         90: ("Tank gun", 5, 1, 2, 0), 91: ("Autocannon", 2, (1, 2), 2, 0),
         92: ("Heavy MG", 1, (1, 2), 2, 0), 93: ("Light MG", 1, 1, 1, 0), 94: ("Crew Handheld Firearms", 1, 1, 1, 0),
         95: ("Crew Handheld Firearms", 1, 1, 1, 0)},
