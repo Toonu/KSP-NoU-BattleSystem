@@ -140,6 +140,7 @@ class Message:
             3: [f"KILL {unit} | “Nailed em! The {unit.typename}’s finished.”",
                 f"KILL {unit} | Enemy is sinking. ({unit.name})",
                 f"KILL {unit} | Scratch one {unit.typename}! ({unit.name})",
+
                 f"KILL {unit} | Enemy has huge hole in his hull! ({unit.name})",
                 f"KILL {unit} | Target {unit.typename} is taking water and abandoning the ship was ordered! "
                 f"KILL {unit} | They’ve gone to the Krusty Krab and never returned. ({unit.name})",
@@ -209,7 +210,7 @@ class Asset:
         self.statename = self.set_state()  # How much alive asset is in normal name
         self.side = side  # Fighting side
         self.year = batch[2]  # Year of origin
-        self.reliability = (self.year - 1945) // 2  # Reliability of its WS
+        self.reliability = self.year - 1945  # Reliability of its WS
         self.systems = self.systems_ammo()
         self.distance = self.distance_per_side()
         self.turn = 1
@@ -440,9 +441,9 @@ class Asset:
         :return:
         """
         if attacker.reliability + random.randint(10, 60) > 50:  # Malfunction by reliability.
-            probability = random.randint(20, 90)
+            probability = random.randint(40, 100)
             for def_sys in self.systems.copy():
-                if probability > 0 and system < 90:
+                if probability >= 0 and system < 90:
                     defend = False
                     try:
                         if eq_systems[self.type][def_sys][2][-1] in (8, 9) and system < 90:
@@ -463,9 +464,12 @@ class Asset:
 
                             if self.systems[def_sys] == 0:  # Removing system if empty.
                                 self.systems.pop(def_sys)
-                            probability -= random.randint(10 * eq_systems[self.type][def_sys][1] // 2,
-                                                          10 * eq_systems[self.type][def_sys][1])
-                            print(f"Fired {eq_systems[self.type][def_sys][0]} in self-defence")
+                            probability -= random.randint(
+                                eq_systems[self.type][def_sys][1] * self.systems[def_sys] * 4,
+                                eq_systems[self.type][def_sys][1] * self.systems[def_sys] * 10
+                            )
+                            print(f"{self.name} {self.typename} fired "
+                                  f"{eq_systems[self.type][def_sys][0]} in self-defence")
 
                         elif eq_systems[2][14] == def_sys:
                             probability += 20
@@ -546,7 +550,7 @@ def finalize(side_a, side_b):
     message.ending()
 
 
-# Eq System Category: {System: {Name str, dmg int, target int/tuple, range int, min range int}}
+# Eq System Category: {System: {Name str, dmg int, target int/tuple, max range int, min range int}}
 vehicles = {
     1: {1: ("MBT", (90, 1, 2, 3, 4, 5, 6, 7), 8), 2: ("AFV", (91, 1, 2, 3, 4, 5, 6, 7), 8),
         3: ("IFV", (92, 1, 2, 3, 4, 5, 6), 6), 4: ("APC", (93, 1, 2, 3, 6), 4),
@@ -572,23 +576,23 @@ vehicles_internal = {1: "MBT", 2: "AFV", 3: "IFV", 4: "APC", 5: "SAM", 6: "MLB",
 eq_systems = {
     1: {1: ("Smoke", 2, 9, 0, 0), 2: ("SK-APS", 3, 8, 0, 0), 3: ("HK-APS", 4, 9, 0, 0), 4: ("ERA", 6, 9, 0, 0),
         5: ("NxRA", 8, 9, 0, 0), 6: ("Applique", 3, 9, 0, 0), 7: ("ATGM", 4, (1, 3), 3, 0),
-        8: ("SR-SAM", 3, 2, 3, 0), 9: ("MR-SAM", 3, 2, 6, 0), 10: ("LR-SAM", 3, 2, 10, 3), 11: ("MR-AShM", 5, 3, 4, 0),
+        8: ("SR-SAM", 3, 2, 3, 0), 9: ("MR-SAM", 3, 2, 6, 0), 10: ("LR-SAM", 3, 2, 10, 3), 11: ("MR-AShM", 6, 3, 4, 0),
         12: ("LR-AShM", 5, 3, 6, 0), 13: ("Heavy MG Turret", 1, 2, 1, 0), 14: ("Autocannon Turret", 2, 2, 1, 0),
         90: ("Tank gun", 5, 1, 2, 0), 91: ("Autocannon", 2, (1, 2), 2, 0),
         92: ("Heavy MG", 1, (1, 2), 2, 0), 93: ("Light MG", 1, 1, 1, 0), 94: ("Crew Handheld Firearms", 1, 1, 1, 0),
         95: ("Crew Handheld Firearms", 1, 1, 1, 0)},
     2: {1: ("Flares", 2, 9, 0, 0), 2: ("Chaff", 2, 9, 0, 0), 3: ("ECM", 2, 8, 0, 0),
         4: ("EWS", 3, 8, 0, 0), 5: ("SRAAM", 4, 2, 2, 0), 6: ("MRAAM", 4, 2, 4, 0), 7: ("LRAAM", 4, 2, 12, 3),
-        8: ("AGM", 4, 1, 3, 0), 9: ("MR-AShM", 5, 3, 4, 0), 10: ("SEAD", 5, 6, 4, 0),
+        8: ("AGM", 4, 1, 3, 0), 9: ("MR-AShM", 6, 3, 4, 0), 10: ("SEAD", 5, 6, 4, 0),
         11: ("Cruise Missile", 3, 1, 5, 0), 12: ("Bomb", 2, 1, 1, 0), 13: ("GBU", 4, 1, 1, 0),
         14: ("Drop Tank", 0, 0, 0, 0),
         90: ("Autocannon", 1, (1, 2), 1, 0), 91: ("Autocannon", 2, (1, 2), 1, 0),
         92: ("Autocannon", 2, (1, 2), 1, 0), 93: ("Defense Turrets", 1, 2, 1, 0),
         94: ("Defense Turrets", 1, 2, 1, 0)},
-    3: {1: ("CIWS", 1, (2, 8), 2, 0), 2: ("DEW", 2, (2, 8), 2, 0), 3: ("ECM", 1, 8, 0, 0),
+    3: {1: ("CIWS", 1, (2, 8), 1, 0), 2: ("DEW", 2, (2, 8), 1, 0), 3: ("ECM", 1, 8, 0, 0),
         4: ("Smoke", 2, 9, 0, 0), 5: ("Chaff", 2, 9, 0, 0), 6: ("SR-SAM", 3, (2, 9), 3, 0),
-        7: ("MR-SAM", 3, (2, 9), 6, 0), 8: ("LR-SAM", 3, 2, 10, 3), 9: ("MR-AShM", 5, 3, 4, 0),
-        10: ("LR-AShM", 5, 3, 6, 0), 11: ("Cruise Missile", 3, 1, 5, 0), 90: ("Main Battery", 1, (1, 2, 3), 1, 0),
+        7: ("MR-SAM", 3, (2, 9), 6, 0), 8: ("LR-SAM", 3, 2, 10, 3), 9: ("MR-AShM", 6, 3, 4, 0),
+        10: ("LR-AShM", 8, 3, 6, 0), 11: ("Cruise Missile", 3, 1, 5, 0), 90: ("Main Battery", 1, (1, 2, 3), 1, 0),
         91: ("Main Battery", 1, (1, 2, 3), 1, 0), 92: ("Main Battery", 1, (1, 2, 3), 1, 0),
         93: ("Main Battery", 1, (1, 2, 3), 2, 0), 94: ("Main Battery", 1, (1, 2, 3), 3, 0),
         95: ("Main Battery", 1, (1, 2, 3), 4, 0), 96: ("Auxiliary Weapons", 1, (2, 3), 1, 0),
@@ -602,7 +606,7 @@ def welcome():
     """
     Introducing welcome!
     """
-    version = "0.9.7"
+    version = "0.9.8"
     headline = f"Welcome to Battle System Manager v{version} (ALPHA)"
     print("=" * len(headline), "\n", headline, "\n", " " * ((len(headline) - 13) // 2), "Made by Toonu\n",
           " " * ((len(headline) - 21) // 2), "The Emperor of Iconia\n", " " * (len(headline) // 2), "☩\n",
@@ -869,7 +873,7 @@ def oob_mod_asset_type(a, years):
                 if not isinstance(response, int) and unit.name == "asset" + response:
                     batch = oob_asset_configuration(unit.type, unit.side, unit.year, years)
                     unit.year = batch[2]
-                    unit.reliability = (unit.year - 1945) // 2
+                    unit.reliability = unit.year - 1945
                     unit.internal = unit.asset_assign(batch)
                     unit.typename = vehicles[batch[0]][batch[1]][0]
                     unit.external = batch[1]
