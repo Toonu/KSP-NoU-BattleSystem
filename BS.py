@@ -440,8 +440,8 @@ class Asset:
         :param system:
         :return:
         """
-        if attacker.reliability + random.randint(10, 60) > 50:  # Malfunction by reliability.
-            probability = random.randint(40, 100)
+        if attacker.reliability + random.randint(-10, 50) > 50:  # Malfunction by reliability.
+            probability = random.randint(20, 80)
             for def_sys in self.systems.copy():
                 if probability >= 0 and system < 90:
                     defend = False
@@ -548,6 +548,7 @@ def finalize(side_a, side_b):
         print(f"{i.name} {i.typename} retreated successfully with {i.state} ({i.set_state(True)}) remaining health.")
     print("\nThe battle has ended with this results. Stay strong! Long live the Emperor!")
     message.ending()
+    input("The program will end after pressing enter. Screenshot the results!!!")
 
 
 # Eq System Category: {System: {Name str, dmg int, target int/tuple, max range int, min range int}}
@@ -957,7 +958,7 @@ def start(bugs=True):
             oob_main()
         except Exception as e:
             print(f"Program crashed with this error: {e}, {type(e)}, {e.args}, \nPlease report the error to the "
-                  f"developers.\nRe-launching program now.\n\n")
+                  f"developers.\n\n")
             print(traceback.format_exc())
             input("Program will restart after pressing enter:")
     else:
