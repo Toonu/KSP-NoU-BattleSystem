@@ -10,11 +10,6 @@ import time
 """
 Add ceountermeasure system overwhelm by adding them 0 effectivity if they was attacked 
 already in that turn, then reset the value.
-
-Add fuel tank to reduce combat effectivness
-
-
-Add ship SRSAM as both defensive and attacking weapon
 """
 
 
@@ -251,7 +246,7 @@ class Asset:
         elif self.type == 1:
             return {89 + self.external: 80}
 
-    def set_state(self):
+    def set_state(self, finals=False):
         """
         Sets unit state name
         :return:
@@ -269,10 +264,10 @@ class Asset:
             result = state[self.state // 2]
         elif self.state != 9:
             result = state[round(self.state / 2.5)]
-        if self.state < vehicles[self.type][self.external][2] // 2:
-            print(f"{self.name} {self.typename} withdrawing!")
+        if not finals and self.state < vehicles[self.type][self.external][2] // 2:
             result = state[9]
         return result
+
 
     def add_system(self, system, amount):
         """
@@ -332,7 +327,6 @@ class Asset:
         """
         attack_result = (0, 0), 0
         target = 0
-        cont = False
         while len(side_b) > 0 and len(side_a) > 0:
             target = (side_a + side_b)[random.randint(0, len(side_a + side_b) - 1)]
             if self.systems is None:
@@ -340,6 +334,7 @@ class Asset:
             if target.side != self.side:
                 maximum = 0
                 best_system = 0
+                cont = False
                 for system in self.systems:
                     cont = False
                     try:
@@ -354,29 +349,34 @@ class Asset:
                         if eq_systems[self.type][system][2] == target.type and eq_systems[self.type][system][3] >= \
                                 abs(self.distance - target.distance) >= eq_systems[self.type][system][4]:
                             cont = True
-                    try:
-                        if cont and eq_systems[self.type][system][1] > maximum:  # getting max damage weapon
-                            maximum = eq_systems[self.type][system][1]
-                            best_system = system
-                    except:
-                        pass
+                    if cont and eq_systems[self.type][system][1] >= maximum:  # getting max damage weapon
+                        maximum = eq_systems[self.type][system][1]
+                        best_system = system
                 if cont:
-                    self.systems[best_system] -= 1
+                    try:
+                        if 8 not in eq_systems[self.type][best_system][2]:
+                            self.systems[best_system] -= 1
+                    except TypeError:
+                        if 8 != eq_systems[self.type][best_system][2]:
+                            self.systems[best_system] -= 1
                     if self.systems[best_system] <= 0:
                         self.systems.pop(best_system)
-                    probability = self.probability(self, best_system)
+                    probability = target.probability(self, best_system)
                     if probability < 30:
                         self.failure(best_system, probability, target)
                     else:
                         attack_result = target.defense(self, best_system, probability)
                         self.failure(best_system, attack_result[0], target, attack_result[1])
                     break
+                elif self.distance == 0 and not cont:  # Withdrawal when nothing can be fired upon.
+                    self.statename = "Withdrawing"
                 break
             else:
                 continue
 
         self.turn += 1
         if self.statename == "Withdrawing":  # Withdrawal
+            print(f"{self.name} {self.typename} withdrawing!")
             if self.side == 1:
                 self.distance += 2
             else:
@@ -440,18 +440,37 @@ class Asset:
         :param system:
         :return:
         """
-        if attacker.reliability + random.randint(0, 50) > 50:  # Malfunction by reliability.
-            probability = random.randint(0, 100)
+        if attacker.reliability + random.randint(10, 60) > 50:  # Malfunction by reliability.
+            probability = random.randint(20, 90)
             for def_sys in self.systems.copy():
-                if eq_systems[self.type][def_sys][1] < 0 and system < 90:
-                    if not (attacker.type == 1 and def_sys == 2) or not (
-                            attacker.type == 2 and def_sys in (3, 4)) or not \
-                            (attacker.type == 3 and def_sys in (2, 3)):  # Systems without ammunition to decrease.
-                        self.systems[def_sys] -= 1
-                        if self.systems[def_sys] == 0:  # Removing system if empty.
-                            self.systems.pop(def_sys)
-                    probability -= random.randint(10 * -eq_systems[self.type][self.external][1] // 2,
-                                                  10 * -eq_systems[self.type][self.external][1])
+                if probability > 0 and system < 90:
+                    defend = False
+                    try:
+                        if eq_systems[self.type][def_sys][2][-1] in (8, 9) and system < 90:
+                            defend = True
+                    except TypeError:
+                        if (9 == eq_systems[self.type][def_sys][2] or 8 == eq_systems[self.type][def_sys][2]) \
+                                and system < 90:
+                            defend = True
+                    finally:
+                        if defend:
+                            try:
+                                if 8 not in eq_systems[self.type][def_sys][2]:
+                                    # Systems without ammunition to decrease.
+                                    self.systems[def_sys] -= 1
+                            except TypeError:
+                                if 8 != eq_systems[self.type][def_sys][2]:  # Systems without ammunition to decrease.
+                                    self.systems[def_sys] -= 1
+
+                            if self.systems[def_sys] == 0:  # Removing system if empty.
+                                self.systems.pop(def_sys)
+                            probability -= random.randint(10 * eq_systems[self.type][def_sys][1] // 2,
+                                                          10 * eq_systems[self.type][def_sys][1])
+                            print(f"Fired {eq_systems[self.type][def_sys][0]} in self-defence")
+
+                        elif eq_systems[2][14] == def_sys:
+                            probability += 20
+
             if probability < 30:
                 return 2  # Miss return
             else:
@@ -523,7 +542,7 @@ def finalize(side_a, side_b):
     print("\nThe remaining units:")
     oob_listing(side_a + side_b)
     for i in retreated:
-        print(f"{i.name} {i.typename} retreated successfully.")
+        print(f"{i.name} {i.typename} retreated successfully with {i.state} ({i.set_state(True)}) remaining health.")
     print("\nThe battle has ended with this results. Stay strong! Long live the Emperor!")
     message.ending()
 
@@ -552,39 +571,39 @@ vehicles_internal = {1: "MBT", 2: "AFV", 3: "IFV", 4: "APC", 5: "SAM", 6: "MLB",
                      11: "Very Large Heavy Aircraft", 12: "Corvette", 13: "Frigate", 14: "Destroyer", 15: "Cruiser",
                      16: "Battlecruiser", 17: "Battleship", 18: "Light Carrier", 19: "Aircraft Carrier"}
 eq_systems = {
-    1: {1: ("Smoke", -2, 0, 0, 0), 2: ("SK-APS", -3, 0, 0, 0), 3: ("HK-APS", -4, 0, 0, 0), 4: ("ERA", -6, 0, 0, 0),
-        5: ("NxRA", -8, 0, 0, 0), 6: ("Applique", -3, 0, 0, 0), 7: ("ATGM", 4, (1, 3), 3, 0),
+    1: {1: ("Smoke", 2, 9, 0, 0), 2: ("SK-APS", 3, 8, 0, 0), 3: ("HK-APS", 4, 9, 0, 0), 4: ("ERA", 6, 9, 0, 0),
+        5: ("NxRA", 8, 9, 0, 0), 6: ("Applique", 3, 9, 0, 0), 7: ("ATGM", 4, (1, 3), 3, 0),
         8: ("SR-SAM", 3, 2, 3, 0), 9: ("MR-SAM", 3, 2, 6, 0), 10: ("LR-SAM", 3, 2, 10, 3), 11: ("MR-AShM", 5, 3, 4, 0),
         12: ("LR-AShM", 5, 3, 6, 0), 13: ("Heavy MG Turet", 1, 2, 1, 0), 14: ("Autocannon Turret", 2, 2, 1, 0),
         90: ("Tank gun", 5, 1, 2, 0), 91: ("Autocannon", 2, (1, 2), 2, 0),
         92: ("Heavy MG", 1, (1, 2), 2, 0), 93: ("Light MG", 1, 1, 1, 0), 94: ("Crew Handheld Firearms", 1, 1, 1, 0),
         95: ("Crew Handheld Firearms", 1, 1, 1, 0)},
-    2: {1: ("Flares", -2, 0, 0, 0), 2: ("Chaff", -2, 0, 0, 0), 3: ("ECM", -2, 0, 0, 0),
-        4: ("EWS", -3, 0, 0, 0), 5: ("SRAAM", 4, 2, 2, 0), 6: ("MRAAM", 4, 2, 4, 0), 7: ("LRAAM", 4, 2, 12, 3),
+    2: {1: ("Flares", 2, 9, 0, 0), 2: ("Chaff", 2, 9, 0, 0), 3: ("ECM", 2, 8, 0, 0),
+        4: ("EWS", 3, 8, 0, 0), 5: ("SRAAM", 4, 2, 2, 0), 6: ("MRAAM", 4, 2, 4, 0), 7: ("LRAAM", 4, 2, 12, 3),
         8: ("AGM", 4, 1, 3, 0), 9: ("MR-AShM", 5, 3, 4, 0), 10: ("SEAD", 5, 6, 4, 0),
         11: ("Cruise Missile", 3, 1, 5, 0), 12: ("Bomb", 2, 1, 1, 0), 13: ("GBU", 4, 1, 1, 0),
         14: ("Drop Tank", 0, 0, 0, 0),
         90: ("Autocannon", 1, (1, 2), 1, 0), 91: ("Autocannon", 2, (1, 2), 1, 0),
         92: ("Autocannon", 2, (1, 2), 1, 0), 93: ("Defense Turrets", 1, 2, 1, 0),
         94: ("Defense Turrets", 1, 2, 1, 0)},
-    3: {1: ("CIWS", -1, 2, 2, 0), 2: ("DEW", -5, 2, 2, 0), 3: ("ECM", -1, 0, 0, 0),
-        4: ("Smoke", -2, 0, 0, 0), 5: ("Chaff", -2, 0, 0, 0), 6: ("SR-SAM", 3, 2, 3, 0), 7: ("MR-SAM", 3, 2, 6, 0),
-        8: ("LR-SAM", 3, 2, 10, 3), 9: ("MR-AShM", 5, 3, 4, 0), 10: ("LR-AShM", 5, 3, 6, 0),
-        11: ("Cruise Missile", 3, 1, 5, 0), 90: ("Main Battery", 1, (1, 2, 3), 1, 0),
+    3: {1: ("CIWS", 1, (2, 8), 2, 0), 2: ("DEW", 2, (2, 8), 2, 0), 3: ("ECM", 1, 8, 0, 0),
+        4: ("Smoke", 2, 9, 0, 0), 5: ("Chaff", 2, 9, 0, 0), 6: ("SR-SAM", 3, (2, 9), 3, 0),
+        7: ("MR-SAM", 3, (2, 9), 6, 0), 8: ("LR-SAM", 3, 2, 10, 3), 9: ("MR-AShM", 5, 3, 4, 0),
+        10: ("LR-AShM", 5, 3, 6, 0), 11: ("Cruise Missile", 3, 1, 5, 0), 90: ("Main Battery", 1, (1, 2, 3), 1, 0),
         91: ("Main Battery", 1, (1, 2, 3), 1, 0), 92: ("Main Battery", 1, (1, 2, 3), 1, 0),
         93: ("Main Battery", 1, (1, 2, 3), 2, 0), 94: ("Main Battery", 1, (1, 2, 3), 3, 0),
         95: ("Main Battery", 1, (1, 2, 3), 4, 0), 96: ("Auxiliary Weapons", 1, (2, 3), 1, 0),
         97: ("Auxiliary Weapons", 1, (2, 3), 1, 0)}
 }
-state = ["KIA", "Heavily Damaged", "Major Damage taken", "Damaged", "Slightly damaged", "Scratched", "In nominal state",
-         "Worried", "New", "Withdrawing", "unknown"]
+state = ["KIA", "Heavily Damaged", "Major Damage taken", "Damaged", "Slightly damaged", "Scratched",
+         "In nominal condition", "Worried", "New", "Withdrawing", "unknown"]
 
 
 def welcome():
     """
     Introducing welcome!
     """
-    version = "0.9.6"
+    version = "0.9.7"
     headline = f"Welcome to Battle System Manager v{version} (ALPHA)"
     print("=" * len(headline), "\n", headline, "\n", " " * ((len(headline) - 13) // 2), "Made by Toonu\n",
           " " * ((len(headline) - 21) // 2), "The Emperor of Iconia\n", " " * (len(headline) // 2), "☩\n",
@@ -924,18 +943,20 @@ def user_input(minimum=0, maximum=1, msg="", enter=False, string=False, check=""
             print("Invalid input! Please retry.")
 
 
-def start(bugs=False):
+def start(bugs=True):
     """
     Starting function for the whole program.
     :param bugs: Enables bug logging for user. Shows error when the program crashes.
     """
+    import traceback
     if bugs:
         try:
             oob_main()
         except Exception as e:
             print(f"Program crashed with this error: {e}, {type(e)}, {e.args}, \nPlease report the error to the "
                   f"developers.\nRe-launching program now.\n\n")
-            oob_main()
+            print(traceback.format_exc())
+            input("Program will restart after pressing enter:")
     else:
         oob_main()
 
