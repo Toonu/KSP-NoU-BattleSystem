@@ -1,1 +1,1 @@
-python -m PyInstaller "Battle System.spec"
+pyinstaller BattleSystem.spec -F -i IS.ico

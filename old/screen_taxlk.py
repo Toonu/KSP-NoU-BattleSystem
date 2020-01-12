@@ -97,7 +97,7 @@ screen_talk_kv = """
             on_text: root.screen_one.text_input_two.text = args[1]
 
         Button:
-            text: "Return to previous screen."
+            text: root.screen_one.text_input_one.text
             on_press:
                 root.manager.current = "screen_one"
 

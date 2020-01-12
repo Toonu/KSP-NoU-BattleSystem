@@ -7,9 +7,7 @@ import time
 
 from kivy.app import App
 from kivy.lang import Builder
-from kivy.uix.screenmanager import ScreenManager, Screen
-
-Builder.load_file("bs.kv")
+from kivy.uix.screenmanager import Screen
 
 
 def welcome():
@@ -508,31 +506,13 @@ class WelcomeScreen(Screen):
     def check(self, check1, check2, check3, result):
         if oob_input(check1, self.years[0], self.years[1]) and oob_input(check2, maximum=99) and \
                 oob_input(check3, maximum=99):
-
-            sm.add_widget(OOB(self.years, check1.text, check2.text, check3.text, name="OOB"))
-            sm.current = "OOB"
+            App.get_running_app().root.current = "oob"
         else:
             result.text = "Wrong inputs!\nPlease retry!"
-            sm.add_widget(OOB(self.years, check1.text, check2.text, check3.text, name="OOB"))
-            sm.current = "OOB"
 
 
 class OOB(Screen):
-    def __init__(self, years, def_year, side_1, side_2, **kwargs):
-        self.years = years
-        self.def_year = def_year
-        self.sides = [side_1, side_2]
-        self.side_a = []
-        self.side_b = []
-        self.counter_a = 0
-        self.counter_b = 0
-        for i in range(int(side_1)):
-            self.asset = f"asset1_{i}"
-            self.side_a.append(f"asset1_{i}")
-        for j in range(int(side_2)):
-            self.asset = f"asset2_{j}"
-            self.side_b.append(f"asset2_{j}")
-        super().__init__(**kwargs)
+    asset = 1
 
     def on_kv_post(self, base_widget):
         # self.import_variables()
@@ -560,7 +540,7 @@ class BSApp(App):
         label.font_size = 0.5 * label.height
 
     def build(self):
-        return sm
+        self.root = Builder.load_file("bs.kv")
 
 
 vehicles = {
@@ -611,9 +591,10 @@ eq_systems = {
 state = ["KIA", "Heavily Damaged", "Major Damage taken", "Damaged", "Slightly damaged", "Scratched", "In nominal state",
          "Worried", "New", "Withdrawing", "unknown"]
 
-sm = ScreenManager()
+"""sm = ScreenManager()
 sm.add_widget(WelcomeScreen(name="WelcomeScreen"))
 sm.current = "WelcomeScreen"
+"""
 
 default = Asset("default", [1, 1, 1999], 1)
 default.systems[1] = 2

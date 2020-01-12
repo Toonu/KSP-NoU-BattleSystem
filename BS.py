@@ -10,6 +10,10 @@ import time
 """
 Add countermeasure system overwhelm by adding them 0 effect if they was attacked 
 already in that turn, then reset the value.
+
+Add ability to attack each type of target once per turn
+
+Rewrite adding units by their type in batches
 """
 
 
@@ -327,6 +331,7 @@ class Asset:
         """
         attack_result = (0, 0), 0
         target = 0
+        cont = False
         while len(side_b) > 0 and len(side_a) > 0:
             target = (side_a + side_b)[random.randint(0, len(side_a + side_b) - 1)]
             if self.systems is None:
@@ -368,11 +373,12 @@ class Asset:
                         attack_result = target.defense(self, best_system, probability)
                         self.failure(best_system, attack_result[0], target, attack_result[1])
                     break
-                elif self.distance == 0 and not cont:  # Withdrawal when nothing can be fired upon.
-                    self.statename = "Withdrawing"
                 break
             else:
                 continue
+
+        if self.distance == 0 and not cont and len(self.systems) < 2:  # Withdrawal when nothing can be fired upon.
+            self.statename = "Withdrawing"
 
         self.turn += 1
         if self.statename == "Withdrawing":  # Withdrawal
@@ -607,7 +613,7 @@ def welcome():
     """
     Introducing welcome!
     """
-    version = "0.9.8"
+    version = "0.9.9"
     headline = f"Welcome to Battle System Manager v{version} (ALPHA)"
     print("=" * len(headline), "\n", headline, "\n", " " * ((len(headline) - 13) // 2), "Made by Toonu\n",
           " " * ((len(headline) - 21) // 2), "The Emperor of Iconia\n", " " * (len(headline) // 2), "☩\n",
@@ -709,6 +715,36 @@ def oob_asset_configuration(number, side, year, years):
         if new_year is not None and new_year != "":
             year = new_year
         return category, unit_type, year
+
+
+def oob_asset_configuration_new(number, side, year, years, maximum):
+    """
+    Specify each asset category, year and its type
+    :param number: Specify asset object number.
+    :param side: Specify asset side number.
+    :param year: Default asset year accepted if not changed.
+    :param years: Lower and upper year limit of assets.
+    :return: Returns unit category (veh, air, sea), type (subtype of category) and year of production.
+    """
+    clear()  # Chooses unit category.
+    category = user_input(1, 3, f"Asset configuration mode:\n\nSide: A\nWhat category of vehicles you want to add?"
+                                f"\n1 | Ground\n2 | Air\n3 | Naval\nInput: ")
+    clear()  # Chooses unit type.
+    print(f"Asset configuration mode:\n\nChoose type subcategory: ")
+    for i in range(1, len(vehicles[category]) + 1):  # Prints out all unit types of unit category.
+        print(i, "=", vehicles[category][i][0], end=" | ")
+    unit_type = user_input(maximum=len(vehicles[category]), msg="\nInput: ")
+
+    clear()  # Chooses unit year.
+    print(f"Asset configuration mode:\n\nChoose amount of vehicles: ")
+    amount = user_input(1, maximum)
+    while True:
+        print(f"Asset configuration mode:\n\nVehicle origin year. ({years[0]} - {years[1]})"
+              f"\nPress enter if: {year}\nInput: ")
+        new_year = user_input(years[0], years[1], enter=True)  # Assigns new non-default year for the unit.
+        if new_year is not None and new_year != "":
+            year = new_year
+        return category, unit_type, year, amount
 
 
 def oob_equipment(a):

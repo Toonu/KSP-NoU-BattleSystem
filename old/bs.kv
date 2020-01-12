@@ -1,4 +1,13 @@
 <WelcomeScreen>
+    name: "welcome_screen"
+
+    years_text_input: years_text_input
+    years_text_input_result: years_text_input_result
+    side_1: side_1
+    side_1_result: side_1_result
+    side_2: side_2
+    side_2_result: side_2_result
+
     BoxLayout:
         orientation: 'vertical'
         Image:
@@ -28,7 +37,7 @@
             height: 50
             cols:4
             size_hint_y: None
-            Widget:
+            Label:
                 size_hint_x: 1
             Label:
                 text: f"Specify default battle year {root.years[0]} - {root.years[1]}"
@@ -43,6 +52,7 @@
                 on_text:
                     app.align_text(self)
                     root.blinker(self, years_text_input_result, root.years[0], root.years[1])
+                    def_year: self.text
                 size_hint_x: 2
             Label:
                 id: years_text_input_result
@@ -51,7 +61,7 @@
             height: 50
             cols:4
             size_hint_y: None
-            Widget:
+            Label:
                 size_hint_x: 1
             Label:
                 text: "Side 1: "
@@ -74,7 +84,7 @@
             height: 50
             cols:4
             size_hint_y: None
-            Widget:
+            Label:
                 size_hint_x: 1
             Label:
                 text: "Side 2: "
@@ -110,11 +120,12 @@
                 size_hint_x: 1
 
 <OOB>
+    name: "oob"
     BoxLayout:
         id: oob_box
         orientation: "vertical"
         Label:
-            text: f"Asset Configuration Editor\n{(root.asset).capitalize()}"
+            text: f"Asset Configuration Editor\n"
             valign: "center"
             size_hint_y: 1
 
@@ -232,11 +243,31 @@
             orientation: "vertical"
             size_hint_y: 2
             Label:
-                text: f"If the vehicle is not from year{root.def_year}, input new value, else leave blank"
+                on_kv_post: self.text = str(root.welcome_screen.years_text_input.text)
             TextInput:
                 id: years_changer
+                multiline: False
+                halign: "center"
+                on_text:
+                    app.align_text(self)
+            Label:
+                text: f"How many vehicles of this type?"
+            TextInput:
+                id: number_of_vehicles
+                multiline: False
+                halign: "center"
                 on_text:
                     app.align_text(self)
             Button:
                 text: "Next"
                 on_release: next(years_changer)
+
+
+ScreenManager:
+    id: sm
+    WelcomeScreen:
+        id: welcome_screen
+        oob: oob
+    OOB:
+        id: oob
+        welcome_screen: welcome_screen
