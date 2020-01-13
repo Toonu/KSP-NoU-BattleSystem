@@ -2,6 +2,7 @@
 Welcome
 """
 
+import random
 from sys import exit
 
 # noinspection PyPep8Naming
@@ -16,17 +17,21 @@ class Asset:
     def __init__(self, name, side, unit_type, year):
         has_radar = lambda x: True if x == 4 else False
         set_distance = lambda x: -6 if x == 1 else 6
+        set_side_unit = lambda x: (1, -1, 2) if x == 1 else (2, 1, 1)
         self.default_eq = lambda x: {vehicles[x.type[0]][x.type[1]][1][0]: vehicles[x.type[0]][x.type[1]][3]}
         self.name = name
         self.type = category(unit_type)  # 0 Class 1 Subclass 2 Internal, 3 str name
         self.type.insert(2, unit_type)
         self.state = [vehicles[self.type[0]][self.type[1]][2]]  # 0 State 1 str state
         self.state.append(self.set_state())
-        self.side = side  # Fighting side
+        self.side = set_side_unit(side)  # Fighting side
         self.year = year  # Year of origin
         self.distance = set_distance(side)
         self.systems = self.default_eq(self)
         self.has_radar = has_radar(unit_type)
+        self.is_withdrawing = 0
+        self.oversaturated = []
+        self.turn = 0
 
     def __str__(self):
         return str(f"{self.name}_{self.type[3]}: {str(self.state[1])} | Dist: {self.distance}")
@@ -55,7 +60,7 @@ class Asset:
 
     def define_system(self, system, reverse=False):
         """
-        Inverts sysytem from int to its str name.
+        Inverts system from int to its str name.
         @param system: System to invert.
         @param reverse: Inverts str to its int name.
         @return: Returns inverted int/str.
@@ -90,6 +95,183 @@ class Asset:
         except ValueError:
             sg.popup_auto_close("Wrong input", auto_close_duration=1)
 
+    def attack(self, sides, stats):
+        """
+
+        @param sides:
+        @param stats:
+        """
+        self.dist()
+        from copy import deepcopy
+        targets = {"enemy": deepcopy(sides[self.side[2]]), "denied": [], "attacked": {}}
+        dist_calc = lambda x, y: abs(x - y)
+
+        while targets["enemy"]:
+            attacked = False
+            target = targets["enemy"][random.randint(0, len(targets["enemy"]) - 1)]
+            if target not in targets["denied"] and target.type[0] not in targets["attacked"]:
+                for weapon in self.systems:
+                    if (target.type[0] in eq_systems[self.type[0]][weapon][2]
+                        and dist_calc(self.distance, target.distance) <= eq_systems[self.type[0]][weapon][3]) \
+                            or (eq_systems[self.type[0]][weapon][2] == 6 and target.has_radar):
+                        # Successful weapon <=> target <=> distance lock | OR | SEAD mechanics.
+                        target.hit(self, weapon, sides, stats)
+                        targets["attacked"][target.type[0]] = target
+                        targets["enemy"].remove(target)
+                        attacked = True
+                        break
+                if not attacked:  # When target type is correct but no weapon can engage them.
+                    targets["denied"].append(target)
+                    targets["enemy"].remove(target)
+            else:  # When target type was already attacked that turn.
+                targets["denied"].append(target)
+                targets["enemy"].remove(target)
+
+    def dist(self):
+        """
+        YES
+        """
+        self.turn += 1
+
+        if self.is_withdrawing == 0 and not self.distance == 0:  # Normal move
+            self.distance -= 1 * self.side[1]
+        elif self.is_withdrawing == 1:  # Withdraw
+            self.distance += 2 * self.side[1]
+        elif self.is_withdrawing == 2:  # Pursue
+            self.distance -= 2 * self.side[1]
+
+    def hit(self, aggressor, weapon, sides, stats):
+        """
+        @todo add pursue mechanics based on enemy withdraw variables
+
+        @param aggressor:
+        @param weapon:
+        @param sides:
+        @param stats:
+        """
+        if aggressor.year - 1945 + random.randint(0, 60) > 50:
+            probability = self.cm(weapon)
+            if probability > 40:  # Normal hit
+                self.state[0] -= eq_systems[aggressor.type[0]][weapon][1] + random.randint(-1, 1)
+            elif probability > 80:  # Critical
+                self.state[0] -= (eq_systems[aggressor.type[0]][weapon][1] * 2) + random.randint(-2, 3)
+            else:  # no hit
+                pass
+        self.database(sides, stats, weapon)
+
+        print(f"BOOM {aggressor.name} > {self.name} | {aggressor.define_system(weapon)}")
+
+    def database(self, sides, stats, weapon=0):
+        """
+
+        @param sides:
+        @param stats:
+        @param weapon:
+        """
+        if weapon != 0:
+            stats[6][2][weapon] += 1
+        if self.state[0] <= 0:
+            sides[self.side[0]].remove(self)
+            stats[6][1].append(self)
+        elif self.state[0] < vehicles[self.type[0]][self.type[1]][2] // 2 and random.randint(30, 100) >= 50:
+            self.is_withdrawing = True
+        if 9 < self.distance < -9 and self.is_withdrawing:
+            sides[self.side[0]].remove(self)
+            stats[6][0].append(self)
+
+    def cm(self, weapon):
+        """
+        Countermeasures
+        @param weapon:
+        """
+        probability = 70 + random.randint(-30, 30) + (self.type[0] * 2)
+        for sys in self.systems:
+            if (8, 9) in eq_systems[self.type[0]][sys][2] and weapon < 90 and sys not in self.oversaturated:
+                probability -= random.randint(eq_systems[self.type[0]][sys][1] * self.systems[sys] * 4,
+                                              eq_systems[self.type[0]][sys][1] * self.systems[sys] * 10)
+                if 9 in eq_systems[self.type[0]][sys][2]:
+                    self.systems[sys] -= 1
+                    if self.systems[sys] <= 0:
+                        self.systems.pop(sys)
+                self.oversaturated.append(sys)
+            elif self.type[0] == 2 and sys == 14:
+                probability += 20
+        return probability
+
+
+def battle_turn(sides, stats):
+    """
+
+    @param stats:
+    @param sides:
+    """
+
+    stats.append(0)
+    stats.append([[], [], {}])  # Stats 6[x] withdrawn, destroyed, used systems per side.
+
+    sg.theme('DarkBlue13')
+    layout = []
+    menu_def = [['&Edit', ['Units', '---', 'Exit']], ['&Properties', []]]
+    layout.append([sg.Menu(menu_def)])
+
+    col = unit_listing(sides, [])
+
+    layout.append([sg.T(f"Battle Simulator - Turn: {stats[5]}")])
+    layout.append([sg.Col(col)])
+    layout.append([sg.B("Next Turn", size=(20, 5), button_color=("#000000", "#dbc867"))])
+    window = sg.Window(f'Battle System {stats[3]}', layout, resizable=True,
+                       size=(600, 600), return_keyboard_events=True)
+
+    while True:
+        event, values = window.read()
+        if event in (None, "Exit"):  # User closes window or presses Exit button.
+            exit()
+        elif event in ("Next Turn", "\r"):  # User presses Next button to get to the next turn.
+            stats[5] += 1  # Adding turn +1
+            for unit in sides[1] + sides[2]:
+                unit.attack(sides, stats)
+            for unit in sides[1] + sides[2]:
+                unit.oversaturated = []
+            break
+        elif event == "Units":  # Show unit tab view only.
+            oob_units(sides, stats, view_only=True)
+
+    window.close()
+    return stats
+
+
+def battle_finalize(sides, stats):
+    """
+
+    @param sides:
+    @param stats:
+    """
+    sg.theme('DarkBlue13')
+    layout = []
+    menu_def = [['&Edit', ['Units', '---', 'Exit']], ['&Properties', []]]
+    layout.append([sg.Menu(menu_def)])
+
+    col = unit_listing(sides, [])
+
+    layout.append([sg.T(f"Battle Simulator - Ended at turn: {stats[5]}")])
+    layout.append([sg.Col(col)])
+    layout.append([sg.B("Close results", size=(20, 5), button_color=("#000000", "#dbc867"))])
+    window = sg.Window(f'Battle System {stats[3]}', layout, resizable=True,
+                       size=(600, 600), return_keyboard_events=True)
+
+    # TODO Add one column for surviving, retreated, destroyed and fired systems.
+
+    while sides[1] is not None or sides[2] is not None:
+        event, values = window.read()
+        if event in (None, "Exit"):  # User closes window or presses Exit button.
+            exit()
+        elif event == "Close results":  # User presses Next button to get to the next turn.
+            break
+        elif event == "Units":  # Show unit tab view only.
+            oob_units(sides, stats, view_only=True)
+
+    window.close()
+
 
 def oob():
     """
@@ -99,7 +281,7 @@ def oob():
     side2 = []
     print("Do not dare to close this or I will haunt you in the sleep!")
 
-    stats = oob_stats()
+    stats = oob_stats()  # Stats 0 default year, 1 sideA, 2 sideB, 3 version, 4 min_max years, 5 turn
     sides = oob_asset_creator(stats, side1, side2)
 
     for i in range(1, 4):
@@ -112,6 +294,9 @@ def oob():
             oob_eq(sides, stats, i)
 
     oob_units(sides, stats)
+    while len(sides[1]) != 0 or len(sides[2]) != 0:
+        stats = battle_turn(sides, stats)
+    battle_finalize(sides, stats)
 
 
 # noinspection SpellCheckingInspection
@@ -382,6 +567,7 @@ def oob_units(sides, stats, clone=None, default=False, view_only=False):
 
     layout.append([sg.Col(column, scrollable=True, size=(500, 500))])
     layout.append([sg.Button("Start Battle", key="battle", size=(20, 5), button_color=("#000000", "#dbc867"))])
+    layout[-1].append(sg.Button("Refresh", size=(20, 5), button_color=("#000000", "#dbc867")))
     layout.append([sg.Menu(menu_def)])
     window = sg.Window(f'Battle System {stats[3]}', layout, resizable=True, size=(600, 600),
                        return_keyboard_events=True)
@@ -416,7 +602,11 @@ def oob_units(sides, stats, clone=None, default=False, view_only=False):
             oob_units(sides, stats, default=default)
         elif event in ("\r", "battle"):  # Finalises this stage and goes into next window.
             break
-        else:  # Clicking any unit button opens the unit editor.
+        elif event == "Refresh":
+            window.close()
+            oob_units(sides, stats, view_only=view_only)
+            break
+        elif event is not None:  # Clicking any unit button opens the unit editor.
             for unit in sides[1] + sides[2]:
                 if unit.name == event:
                     window.close()
@@ -554,28 +744,63 @@ vehicles_internal = {0: "MBT", 1: "AFV", 2: "IFV", 3: "APC", 4: "SAM", 5: "MLB",
                      15: "Battlecruiser", 16: "Battleship", 17: "Light Carrier", 18: "Aircraft Carrier"}
 # noinspection SpellCheckingInspection
 eq_systems = {
-    1: {1: ("Smoke", 2, 9, 0, 0), 2: ("SK-APS", 3, 8, 0, 0), 3: ("HK-APS", 4, 9, 0, 0), 4: ("ERA", 6, 9, 0, 0),
-        5: ("NxRA", 8, 9, 0, 0), 6: ("Applique", 3, 9, 0, 0), 7: ("ATGM", 4, (1, 3), 3, 0),
-        8: ("SR-SAM", 3, 2, 3, 0), 9: ("MR-SAM", 3, 2, 6, 0), 10: ("LR-SAM", 3, 2, 10, 3), 11: ("MR-AShM", 6, 3, 4, 0),
-        12: ("LR-AShM", 5, 3, 6, 0), 13: ("Heavy MG Turret", 1, 2, 1, 0), 14: ("Autocannon Turret", 2, 2, 1, 0),
-        90: ("Tank gun", 5, 1, 2, 0), 91: ("Autocannon", 2, (1, 2), 2, 0),
-        92: ("Heavy MG", 1, (1, 2), 2, 0), 93: ("Light MG", 1, 1, 1, 0), 94: ("Crew Handheld Firearms", 1, 1, 1, 0),
-        95: ("Crew Handheld Firearms", 1, 1, 1, 0)},
-    2: {1: ("Flares", 2, 9, 0, 0), 2: ("Chaff", 2, 9, 0, 0), 3: ("ECM", 2, 8, 0, 0),
-        4: ("EWS", 3, 8, 0, 0), 5: ("SRAAM", 4, 2, 2, 0), 6: ("MRAAM", 4, 2, 4, 0), 7: ("LRAAM", 4, 2, 12, 3),
-        8: ("AGM", 4, 1, 3, 0), 9: ("MR-AShM", 6, 3, 4, 0), 10: ("SEAD", 5, 6, 4, 0),
-        11: ("Cruise Missile", 3, 1, 5, 0), 12: ("Bomb", 2, 1, 1, 0), 13: ("GBU", 4, 1, 1, 0),
-        14: ("Drop Tank", 0, 0, 0, 0),
-        90: ("Autocannon", 1, (1, 2), 1, 0), 91: ("Autocannon", 2, (1, 2), 1, 0),
-        92: ("Autocannon", 2, (1, 2), 1, 0), 93: ("Defense Turrets", 1, 2, 1, 0),
-        94: ("Defense Turrets", 1, 2, 1, 0)},
-    3: {1: ("CIWS", 1, (2, 8), 1, 0), 2: ("DEW", 2, (2, 8), 1, 0), 3: ("ECM", 1, 8, 0, 0),
-        4: ("Smoke", 2, 9, 0, 0), 5: ("Chaff", 2, 9, 0, 0), 6: ("SR-SAM", 3, (2, 9), 3, 0),
-        7: ("MR-SAM", 3, (2, 9), 6, 0), 8: ("LR-SAM", 3, 2, 10, 3), 9: ("MR-AShM", 6, 3, 4, 0),
-        10: ("LR-AShM", 8, 3, 6, 0), 11: ("Cruise Missile", 3, 1, 5, 0), 90: ("Main Battery", 1, (1, 2, 3), 1, 0),
-        91: ("Main Battery", 1, (1, 2, 3), 1, 0), 92: ("Main Battery", 1, (1, 2, 3), 1, 0),
-        93: ("Main Battery", 1, (1, 2, 3), 2, 0), 94: ("Main Battery", 1, (1, 2, 3), 3, 0),
-        95: ("Main Battery", 1, (1, 2, 3), 4, 0), 96: ("Auxiliary Weapons", 1, (2, 3), 1, 0),
+    1: {1: ("Smoke (CM)", 2, [9], 0, 0),
+        2: ("SK-APS (SCM)", 3, [8], 0, 0),
+        3: ("HK-APS (CM)", 4, [9], 0, 0),
+        4: ("ERA (CM)", 6, [9], 0, 0),
+        5: ("NxRA (CM)", 8, [9], 0, 0),
+        6: ("Applique (CM)", 3, [9], 0, 0),
+        7: ("ATGM", 4, (1, 3), 3, 0),
+        8: ("SR-SAM", 3, [2], 3, 0),
+        9: ("MR-SAM", 3, [2], 6, 0),
+        10: ("LR-SAM", 3, [2], 10, 3),
+        11: ("MR-AShM", 6, [3], 4, 0),
+        12: ("LR-AShM", 5, [3], 6, 0),
+        13: ("Heavy MG Turret", 1, [2], 1, 0),
+        14: ("Autocannon Turret", 2, [2], 1, 0),
+        90: ("Tank gun", 5, [1], 2, 0),
+        91: ("Autocannon", 2, (1, 2), 2, 0),
+        92: ("Heavy MG", 1, (1, 2), 2, 0),
+        93: ("Light MG", 1, [1], 1, 0),
+        94: ("Crew Handheld Firearms", 1, [1], 1, 0),
+        95: ("Crew Handheld Firearms", 1, [1], 1, 0)},
+    2: {1: ("Flares (CM)", 2, [9], 0, 0),
+        2: ("Chaff (CM)", 2, [9], 0, 0),
+        3: ("ECM (SCM)", 2, [8], 0, 0),
+        4: ("EWS (SCM)", 3, [8], 0, 0),
+        5: ("SRAAM", 4, [2], 2, 0),
+        6: ("MRAAM", 4, [2], 4, 0),
+        7: ("LRAAM", 4, [2], 12, 3),
+        8: ("AGM", 4, [1], 3, 0),
+        9: ("MR-AShM", 6, [3], 4, 0),
+        10: ("SEAD", 5, [6], 4, 0),
+        11: ("Cruise Missile", 3, [1], 5, 0),
+        12: ("Bomb", 2, [1], 1, 0),
+        13: ("GBU", 4, [1], 1, 0),
+        14: ("Drop Tank", 0, [0], 0, 0),
+        90: ("Autocannon", 1, (1, 2), 1, 0),
+        91: ("Autocannon", 2, (1, 2), 1, 0),
+        92: ("Autocannon", 2, (1, 2), 1, 0),
+        93: ("Defense Turrets", 1, [2], 1, 0),
+        94: ("Defense Turrets", 1, [2], 1, 0)},
+    3: {1: ("CIWS (SCM)", 1, (2, 8), 1, 0),
+        2: ("DEW (SCM)", 2, (2, 8), 1, 0),
+        3: ("ECM (SCM)", 1, [8], 0, 0),
+        4: ("Smoke (CM)", 2, [9], 0, 0),
+        5: ("Chaff (CM)", 2, [9], 0, 0),
+        6: ("SR-SAM (CM)", 3, (2, 9), 3, 0),
+        7: ("MR-SAM (CM)", 3, (2, 9), 6, 0),
+        8: ("LR-SAM", 3, [2], 10, 3),
+        9: ("MR-AShM", 6, [3], 4, 0),
+        10: ("LR-AShM", 8, [3], 6, 0),
+        11: ("Cruise Missile", 3, [1], 5, 0),
+        90: ("Main Battery", 1, (1, 2, 3), 1, 0),
+        91: ("Main Battery", 1, (1, 2, 3), 1, 0),
+        92: ("Main Battery", 1, (1, 2, 3), 1, 0),
+        93: ("Main Battery", 1, (1, 2, 3), 2, 0),
+        94: ("Main Battery", 1, (1, 2, 3), 3, 0),
+        95: ("Main Battery", 1, (1, 2, 3), 4, 0),
+        96: ("Auxiliary Weapons", 1, (2, 3), 1, 0),
         97: ("Auxiliary Weapons", 1, (2, 3), 1, 0)}
 }
 # noinspection SpellCheckingInspection
@@ -640,6 +865,28 @@ def cut(unit):
         return unit.replace("asset", "")
     else:
         return unit.name.replace("asset", "")
+
+
+def unit_listing(sides, col):
+    """
+
+    @param sides:
+    @param col:
+    @return:
+    """
+    for unit in (sides[1] + sides[2]).copy():  # Listing of units.
+        systems = "Eq: "
+        counter = 0
+        col.append([sg.T(f"{unit.name} | {unit.distance} | {unit.state[0]} | "), sg.T()])
+        for item in unit.systems:
+            counter += 1
+            if counter <= 6:  # Overflow prevention adding another row with \n.
+                systems += f"{unit.define_system(item)}: {unit.systems[item]}, "  # Adds to systems.
+            else:
+                systems += f"\n{unit.define_system(item)}: {unit.systems[item]}, "
+                counter = 0
+        col[-1].append(sg.T(f"{systems}", key=f"{cut(unit)}"))
+    return col
 
 
 if __name__ == "__main__":
