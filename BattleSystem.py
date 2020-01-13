@@ -53,16 +53,42 @@ class Asset:
             result = state[9]
         return result
 
-    def define_system(self, system):
+    def define_system(self, system, reverse=False):
         """
-        Defines system str name.
-        :param system:  System int defining system name string.
-        :return:        Returns str of the obj name.
+        Inverts sysytem from int to its str name.
+        @param system: System to invert.
+        @param reverse: Inverts str to its int name.
+        @return: Returns inverted int/str.
+        """
+        if not reverse:
+            try:
+                return eq_systems[self.type[0]][system][0]
+            except KeyError:
+                return "weapon system"
+        else:
+            try:
+                for item in eq_systems[self.type[0]]:
+                    if eq_systems[self.type[0]][item][0] == system:
+                        return item
+            except KeyError:
+                return 0
+
+    def add_system(self, system, amount, default=False):
+        """
+        Adds equipment to the systems dict of object.
+        @param system: System to be added.
+        @param amount: How much of them should be added.
+        @param default: Allows also systems above 90 if true.
         """
         try:
-            return eq_systems[self.type[0]][system][0]
-        except KeyError:
-            return "weapon system"
+            if default and int(amount) > 0 and system in vehicles[self.type[0]][self.type[1]][1]:
+                self.systems[system] = int(amount)
+            elif system < 90 and int(amount) > 0 and system in vehicles[self.type[0]][self.type[1]][1]:
+                self.systems[system] = int(amount)
+            elif system in self.systems:
+                self.systems.pop(system)
+        except ValueError:
+            sg.popup_auto_close("Wrong input", auto_close_duration=1)
 
 
 def oob():
@@ -76,32 +102,22 @@ def oob():
     stats = oob_stats()
     sides = oob_asset_creator(stats, side1, side2)
 
-    veh = air = sea = False
-    for unit in sides[1] + sides[2]:
-        if unit.type[0] == 1:
-            veh = True
-        elif unit.type[0] == 2:
-            air = True
-        elif unit.type[0] == 3:
-            sea = True
-        if veh and sea and air:
-            break
-    if veh:
-        oob_eq(sides, stats, 1)
-    if air:
-        oob_eq(sides, stats, 2)
-    if sea:
-        oob_eq(sides, stats, 3)
+    for i in range(1, 4):
+        cont = False
+        for unit in sides[1] + sides[2]:
+            if unit.type[0] == i:
+                cont = True
+                break
+        if cont:
+            oob_eq(sides, stats, i)
 
     oob_units(sides, stats)
-    print("after")
-    pass
 
 
 # noinspection SpellCheckingInspection
 def oob_stats(bypass=True, def_years=None):
     """
-    Introducing welcome!
+    Sets up default year, amount of units per side and can change default years via properities.
     """
     if def_years is None:
         def_years = [1945, 2020]
@@ -109,7 +125,6 @@ def oob_stats(bypass=True, def_years=None):
     result = True
 
     sg.theme('DarkBlue13')
-    # All the stuff inside your window.
     layout = [[sg.Image("img/IS128.png", size=(128, 128), background_color="#00247d")],
               [sg.Image("img/Air128.png", background_color="#00247d"),
                sg.Text(f"Welcome to Battle System Manager v {version} (BETA)\n"
@@ -126,31 +141,28 @@ def oob_stats(bypass=True, def_years=None):
                sg.InputText(justification="center", enable_events=True, key="b"),
                sg.Text("1< #         .", background_color="#00247d")],
               [sg.Button("Finish", size=(20, 2), button_color=("#000000", "#dbc867"))]]
-
     menu_def = [['&Edit', ['Exit']], ['&Properties', ["&Switch default years"]]]
     layout.append([sg.Menu(menu_def)])
-
     window = sg.Window(f'Battle System {version}', layout, return_keyboard_events=True, element_justification="center",
                        background_color="#00247d")
-    # Event Loop to process "events" and get the "values" of the inputs
+
     while True:
         event, values = window.read()
-        if event is None or event == "Exit":  # if user closes window or clicks cancel
+        if event is None or event == "Exit":  # if user closes window or clicks Exit in menu.
             break
-        elif event == "Finish" or event == "\r":  # Button checks validity and then returns result.
+        elif event == "Finish" or event == "\r":  # Button checks validity of inputs and then returns result.
             if (user_input(values["year"], def_years[0], def_years[1]) and user_input(values["a"], maximum=81)
                     and user_input(values["b"], maximum=81)):
                 result = [values["year"], values["a"], values["b"], version, def_years]
                 break
-            elif bypass:
+            elif bypass:  # Bypasses the check for testing.
                 values["a"] = 4
                 values["b"] = 4
                 values["year"] = 1999
                 result = [values["year"], values["a"], values["b"], version, def_years]
                 break
-            else:
-                continue
         elif event == "Switch default years":
+            # Launches properity change of default years, then re-launch program with new years assigned.
             def_years = oob_ch_year(def_years, version)
             window.close()
             result = oob_stats(def_years=def_years)
@@ -162,24 +174,22 @@ def oob_stats(bypass=True, def_years=None):
 
 def oob_ch_year(def_years, version):
     """
-
-    @param def_years:
-    @param version:
-    @return:
+    Sets up a new default year for the whole program.
+    @param def_years: Original default years.
+    @param version: Program version for headline of the program.
+    @return: Returns new default years.
     """
     sg.theme('DarkBlue13')
-    # All the stuff inside your window.
     layout = [[sg.T("Choose new default year:")],
               [sg.Input(f"{def_years[0]}", size=(6, 1), key="minimal"),
                sg.Input(f"{def_years[1]}", size=(6, 1), key="maximal")], [sg.B("Edit")]]
-
     window = sg.Window(f'Battle System {version}', layout, return_keyboard_events=True)
-    # Event Loop to process "events" and get the "values" of the inputs
+
     while True:
         event, values = window.read()
-        if event is None:  # if user closes window or clicks cancel
+        if event is None:  # When user closes window.
             break
-        elif event == "Edit" or event == "\r":  # Button checks validity and then returns result.
+        elif event == "Edit" or event == "\r":  # Button checks validity of input and then assign new default years.
             if user_input(values["minimal"], 1900, int(values["maximal"])) and \
                     user_input(values["maximal"], int(values["minimal"]), 2200):
                 def_years[0] = int(values["minimal"])
@@ -191,10 +201,13 @@ def oob_ch_year(def_years, version):
 
 def oob_asset_creator(stats, side1, side2, i=1):  # Stats 0 def_year, 1 side_a, 2 side_b
     """
-    Specify each asset category, year and its type
-    :return: Returns unit category (veh, air, sea), type (subtype of category) and year of production.
+    Creating new objects after the user inputs.
+    @param stats: Imported default stats.
+    @param side1: Side 1 list
+    @param side2: Side 2 list
+    @param i: Side added
+    @return: Returns new object assets in a list.
     """
-
     sg.theme('DarkBlue13')
     tab1_layout = [[sg.Radio("MBT", "1")],
                    [sg.Radio("AFV", "1")],
@@ -223,48 +236,45 @@ def oob_asset_creator(stats, side1, side2, i=1):  # Stats 0 def_year, 1 side_a, 
               [sg.T("Amount:             "), sg.In(justification="center")],
               [sg.T("Year if different:  "), sg.In(f"{stats[0]}", justification="center")],
               [sg.Button('Next', size=(20, 2), button_color=("#000000", "#dbc867"))]]
+    window = sg.Window(f'Battle System {stats[3]}', layout, return_keyboard_events=True)
 
     while True:
-        window = sg.Window(f'Battle System {stats[3]}', layout, return_keyboard_events=True)
-        while True:
-            length = 0
-            event, values = window.read()
-            if event is None:  # if user closes window or clicks cancel
-                exit()
-            elif event == "Next" or event == "\r":
-                if user_input(values[20], 1945, 2020, enter=True) and \
-                        user_input(values[19], minimum=1, maximum=int(stats[i])):
-                    for j in range(len(values) - 2):
-                        if values[j]:
-                            if values[20] != "":
-                                if int(values[20]) != stats[0]:
-                                    stats[0] = int(values[20])
-                            length = len(locals()['side' + str(i)])
-                            for k in range(int(values[19])):
-                                locals()["side" + str(i)].append(f"asset{i}_{length + k}")
+        length = 0
+        event, values = window.read()
+        if event is None:  # User closes window.
+            exit()
+        elif event == "Next" or event == "\r":  # User clicks next or press enter.
+            if user_input(values[20], 1945, 2020, enter=True) and \
+                    user_input(values[19], minimum=1, maximum=int(stats[i])):  # Checks inputs and proceeds.
+                for j in range(len(values) - 2):  # j are buttons of unit type - ending text values.
+                    if values[j]:  # Button which is True - future unit type
+                        if values[20] != "" and int(values[20]) != stats[0]:
+                            # Assigns new year if not blank or same as default year.
+                            stats[0] = int(values[20])
+                        length = len(locals()['side' + str(i)])  # Calculate next asset by gaining past maximal asset.
+                        for k in range(int(values[19])):  # k = how many units of that type are created.
+                            locals()["side" + str(i)].append(f"asset{i}_{length + k}")  # creating the objects itself.
+                            locals()["side" + str(i)][length + k] = Asset(f"asset{i}_{length + k}", i, j, stats[0])
+                        stats[i] -= int(values[19])  # deducting created assets for refreshed screen.
+                        window.close()
 
-                                locals()["side" + str(i)][length + k] = Asset(f"asset{i}_{length + k}", i, j, stats[0])
-
-                            stats[i] -= int(values[19])
-                            window.close()
-                            if stats[1] == 0 and stats[2] == 0:
-                                break
-                            if stats[i] == 0 or i == 2:
-                                oob_asset_creator(stats, side1, side2, 2)
-                            else:
-                                oob_asset_creator(stats, side1, side2)
+                        if stats[1] == 0 == stats[2]:  # Ends refreshing screen if no assets can be made.
                             break
-                    break
-        window.close()
-        return {1: side1, 2: side2}
+                        if stats[1] == 0 and i == 1:  # Refresh screen with new variables when 1st side is done.
+                            i += 1
+                        oob_asset_creator(stats, side1, side2, i)
+                        break
+                break
+    window.close()
+    return {1: side1, 2: side2}
 
 
 def oob_eq(sides, stats, unit_type):
     """
-
-    @param unit_type:
-    @param sides:
-    @param stats:
+    Equips unit with dictionary of weapon: amount.
+    @param unit_type: Unit type.
+    @param sides: All objects.
+    @param stats: Program stats.
     """
 
     template_unit = Asset("template_unit", 1, 1, 2000)
@@ -277,26 +287,24 @@ def oob_eq(sides, stats, unit_type):
     column2 = [[]]
     leftcol.append([sg.T("Units:", size=(14, 1))])
 
-    for i in range(1, 3):  # Making the grid
-        column = locals()["column" + f"{i}"]
-        for asset in sides[i]:  # of units
-            if asset.type[0] == unit_type:
+    for i in range(1, 3):  # Making the grid.
+        column = locals()["column" + f"{i}"]  # Assigning column to each side by i.
+        for asset in sides[i]:  # Objects iteration per side.
+            if asset.type[0] == unit_type:  # Only units of unit_type are allowed to be shown.
                 column[-1].append(sg.T(f"{cut(asset)} ", justification="left", auto_size_text=True,
-                                       key=f"{cut(asset)}"))
-        for item in eq_systems[unit_type]:  # of weapons
+                                       key=f"{cut(asset)}"))  # Making unit names headline.
+        for item in eq_systems[unit_type]:  # Grid of weapons bellow id:90
             if item < 90:
-                if not i == 2:
-                    for unit in sides[1] + sides[2]:
-                        if unit.type[0] == unit_type:
-                            template_unit = unit
-                    leftcol.append([sg.T(f"{template_unit.define_system(item)}", size=(14, 1))])
-                column.append([])
-                for asset in sides[i]:
+                if not i == 2:  # Prints left column of weapons for this type of units.
+                    # noinspection PyUnboundLocalVariable
+                    leftcol.append([sg.T(f"{asset.define_system(item)}", size=(14, 1))])
+                column.append([])  # Adds new row for each iteration bellow.
+                for asset in sides[i]:  # Iterate in one side.
                     if asset.type[0] == unit_type and item in vehicles[asset.type[0]][asset.type[1]][1]:
+                        # Prints only right unit type vs system type combinations. Disabled handled in else.
                         column[-1].append(sg.InputText(default_text="0", size=(4, 1),
-                                                       key=f"{str(asset.name) + '_' + str(item)}"))
-                    elif asset.type[0] == unit_type:
-
+                                                       key=f"{str(asset.name)}_{str(item)}"))
+                    elif asset.type[0] == unit_type:  # Systems that unit cannot have are filled with 4 spaces.
                         column[-1].append(sg.T("   ", size=(4, 1)))
 
     maincol = [[]]
@@ -313,129 +321,116 @@ def oob_eq(sides, stats, unit_type):
 
     window = sg.Window(f'Battle System {stats[2]}', layout, resizable=True,
                        size=(100 + 80 * len(sides[1] + sides[2]), 600), return_keyboard_events=True)
-    # Event Loop to process "events" and get the "values" of the inputs
-    while True:  # Working with the grid inputs, checking and adding to assets.
+
+    while True:
         event, values = window.read()
-        if event in (None, "Exit"):  # if user closes window or clicks cancel
+        if event in (None, "Exit"):  # User closes window or click Exit button.
             exit()
         elif event == "Finish" or event == "\r":  # Button checks validity and then returns result.
             check = True
             for asset in sides[1] + sides[2]:
-                if asset.type[0] == unit_type:
+                if asset.type[0] == unit_type:  # Only units of correct type go through.
+                    for j in range(1, len(eq_systems[asset.type[0]]) - len(vehicles[asset.type[0]]) + 1):
+                        try:  # j iterate in range of weapon systems for that unit type.
+                            if not user_input(values[str(asset.name) + '_' + str(j)], maximum=400):
+                                check = False  # If any wrong input is found, popup. Until fixed, won't let through.
+                                break
+                        except KeyError:  # Exception for non-existing j for systems unit subtype cannot obtain.
+                            pass
+            if check:  # When everything correct, add systems.
+                for asset in sides[1] + sides[2]:
                     for j in range(1, len(eq_systems[asset.type[0]]) - len(vehicles[asset.type[0]]) + 1):
                         try:
-                            if not user_input(values[str(asset.name) + '_' + str(j)], maximum=400):
-                                check = False
-                                break
-                        except KeyError:
+                            if asset.type[0] == unit_type and user_input(values[str(asset.name) + '_' + str(j)],
+                                                                         minimum=1, maximum=400, skip=True):
+                                asset.add_system(j, values[str(asset.name) + '_' + str(j)])
+                        except KeyError:  # Exception for non-existing j for systems unit subtype cannot obtain.
                             pass
-            if check:
-                for asset in sides[1] + sides[2]:
-                    if asset.type[0] == unit_type:
-                        for j in range(1, len(eq_systems[asset.type[0]]) - len(vehicles[asset.type[0]]) + 1):
-                            try:
-                                if user_input(values[str(asset.name) + '_' + str(j)], minimum=1, maximum=400,
-                                              skip=True):
-                                    asset.systems[j] = values[str(asset.name) + '_' + str(j)]
-                            except KeyError:
-                                pass
                 break
-            else:
-                continue
-        elif event == "Units":
+        elif event == "Units":  # Show unit view only.
             oob_units(sides, stats, view_only=True)
     window.close()
 
 
 def oob_units(sides, stats, clone=None, default=False, view_only=False):
     """
-
-    @param sides:
-    @param stats:
-    @param clone:
-    @param default:
-    @param view_only:
-    @return:
+    Main screen after inputs. Allows edit each unit individually and clone them.
+    @param sides: Sides list.
+    @param stats: Program stats.
+    @param clone: Memory of cloned systems.
+    @param default: Default admin editing mode.
+    @param view_only: View only access switch.
     """
     sg.theme('DarkBlue13')
-    layout = [[sg.T(f"Unit Editor - Df: {default} | Copied: {clone}", justification="center")]]
     column = []
+    layout = [[sg.T(f"Unit Editor - Df: {default} | Copied: {clone}", justification="center")]]
+    menu_def = [['&Edit', ['Exit']], ['&Properties', ["&Switch default editing"]]]
 
+    if view_only:
+        layout[-1].append(sg.T("VIEW ONLY - You can move this window anywhere!"))
     for unit in sides[1] + sides[2]:
-        if view_only:
+        if view_only:  # Prints unit names and their radars.
             column.append([sg.T(f"{cut(unit)} - {unit.type[3]}", key=f"{unit.name}"), sg.T(f"R: {unit.has_radar}")])
-        else:
-            column.append([sg.Button(f"{cut(unit)} - {unit.type[3]}", key=f"{unit.name}"),
-                           sg.T(f"R: {unit.has_radar}")])
-        column.append([sg.T(f"{unit.year}", size=(5, 1))])
-        systems = ""
+        else:  # Prints unit buttons and their radars.
+            column.append([sg.B(f"{cut(unit)} - {unit.type[3]}", key=f"{unit.name}"), sg.T(f"R: {unit.has_radar}")])
+        column.append([sg.T(f"{unit.year}", size=(5, 1))])  # Prints unit years.
+        systems = "Equipment: "  # Variable to store all systems per unit.
         for item in unit.systems:
-            systems += f"{str(eq_systems[unit.type[0]][item][0])}: {unit.systems[item]}, "
-        column[-1].append(sg.T(f"Equipment: {systems}", key=f"{cut(unit)}",
+            systems += f"{str(eq_systems[unit.type[0]][item][0])}: {unit.systems[item]}, "  # Adds to systems.
+        column[-1].append(sg.T(f"{systems}", key=f"{cut(unit)}",  # Print systems of each unit and is r-clickable/copy.
                                right_click_menu=['&Right', [f"Copy-{cut(unit)}", f"Paste-{cut(unit)}"]]))
 
     layout.append([sg.Col(column, scrollable=True, size=(500, 500))])
-    menu_def = [['&Edit', ['Exit']], ['&Properties', ["&Switch default editing"]]]
-
     layout.append([sg.Button("Start Battle", key="battle", size=(20, 5), button_color=("#000000", "#dbc867"))])
     layout.append([sg.Menu(menu_def)])
+    window = sg.Window(f'Battle System {stats[3]}', layout, resizable=True, size=(600, 600),
+                       return_keyboard_events=True)
 
-    window = sg.Window(f'Battle System {stats[3]}', layout, resizable=True,
-                       size=(600, 600), return_keyboard_events=True)
-
-    while True:  # Working with the grid inputs, checking and adding to assets.
+    while True:
         event, values = window.read()
-        if event in (None, "Close"):
+        if event in (None, "Exit"):  # User closes with Close button or X.
             if not view_only:
                 exit()
-            else:
-                break
-        elif event == "Exit":
-            window.close()
-            return True
-        elif "Copy-" in event:
+            break
+        elif "Copy-" in event:  # Copying
             clone = {}
-            name = "asset" + event.replace("Copy-", "")
+            name = "asset" + event.replace("Copy-", "")  # Getting assetx_y name from button key (event).
             for unit in sides[1] + sides[2]:
                 if unit.name == name:
                     import copy
-                    clone = copy.deepcopy(unit.systems)
+                    clone = copy.deepcopy(unit.systems)  # Clone source unit whole dictionary of systems.
             window.close()
-            oob_units(sides, stats, clone, default)
-        elif "Paste-" in event and clone is not None:
-            name = "asset" + event.replace("Paste-", "")
+            oob_units(sides, stats, clone, default)  # Reload window with copied memory.
+        elif "Paste-" in event and clone is not None:  # Pasting
+            name = "asset" + event.replace("Paste-", "")  # Getting assetx_y name from button key (event).
             for unit in sides[1] + sides[2]:
                 if unit.name == name:
                     for item in clone:
-                        if default and item in vehicles[unit.type[0]][unit.type[1]][1]:
-                            unit.systems[item] = clone[item]
-                        elif item < 90:
-                            unit.systems[item] = clone[item]
+                        if item in vehicles[unit.type[0]][unit.type[1]][1]:
+                            unit.add_system(item, clone[item], default)  # If default false, over 90 aren't allowed.
             window.close()
-            oob_units(sides, stats, clone, default)
+            oob_units(sides, stats, clone, default)  # Reload window copied items.
         elif event == "Switch default editing" and not view_only:
             window.close()
-            if default:
-                oob_units(sides, stats)
-            else:
-                oob_units(sides, stats, default=True)
-        elif event in ("\r", "battle"):
+            default = not default  # Switch default to opposite.
+            oob_units(sides, stats, default=default)
+        elif event in ("\r", "battle"):  # Finalises this stage and goes into next window.
             break
-        else:  # Clicking unit button
+        else:  # Clicking any unit button opens the unit editor.
             for unit in sides[1] + sides[2]:
                 if unit.name == event:
                     window.close()
-                    oob_edit(sides, stats, unit, default)
+                    oob_edit(sides, stats, unit, default=default)
     window.close()
 
 
 def oob_edit(sides, stats, unit, default=False):
     """
-
-    @param sides:
-    @param stats:
-    @param unit:
-    @param default:
+    Unit editor changing unit year, modifying its systems and changing the unit type while erasing its systems.
+    @param sides: Sides list.
+    @param stats: Program stats.
+    @param unit: Modified unit.
+    @param default: Default Mode switch
     """
     sg.theme('DarkBlue13')
     layout = []
@@ -445,84 +440,55 @@ def oob_edit(sides, stats, unit, default=False):
     column = []
 
     for item in unit.systems:
-        if not default:
-            if item < 90:
-                column.append([sg.T(f"{eq_systems[unit.type[0]][item][0]}", size=(16, 1), auto_size_text=True)])
-                column[-1].append(sg.InputText(f"{unit.systems[item]}", size=(4, 1),
-                                               key=eq_systems[unit.type[0]][item]))
-        else:
+        if item < 90:  # Print all weapons of the unit.
             column.append([sg.T(f"{eq_systems[unit.type[0]][item][0]}", size=(16, 1), auto_size_text=True)])
-            column[-1].append(sg.InputText(f"{unit.systems[item]}", size=(4, 1), key=eq_systems[unit.type[0]][item]))
+            column[-1].append(sg.I(f"{unit.systems[item]}", size=(4, 1), key=eq_systems[unit.type[0]][item][0]))
+        elif default:  # Default Mode enable showing editing even default systems. (over 90)
+            column.append([sg.T(f"{eq_systems[unit.type[0]][item][0]}", size=(16, 1), auto_size_text=True)])
+            column[-1].append(sg.I(f"{unit.systems[item]}", size=(4, 1), key=eq_systems[unit.type[0]][item][0]))
 
     adding = []
-    for _ in eq_systems[unit.type[0]]:  # Listing of weapons for weapons adding.
-        if default and _ in vehicles[unit.type[0]][unit.type[1]][1]:
-            adding.append(eq_systems[unit.type[0]][_][0])
-        elif _ < 90 and _ in vehicles[unit.type[0]][unit.type[1]][1]:
-            adding.append(eq_systems[unit.type[0]][_][0])
-
     types = []
+    for _ in eq_systems[unit.type[0]]:  # Listing of weapons for weapons adding.
+        if _ < 90 and _ in vehicles[unit.type[0]][unit.type[1]][1]:
+            adding.append(eq_systems[unit.type[0]][_][0])
+        elif default and _ in vehicles[unit.type[0]][unit.type[1]][1]:
+            # Default Mode enable showing editing even default systems. (over 90)
+            adding.append(eq_systems[unit.type[0]][_][0])
     for i in vehicles:
-        for j in vehicles[i]:
+        for j in vehicles[i]:  # Builds all unit types for its switcher.
             types.append(vehicles[i][j][0])
 
     frame_layout.append([sg.Button("Add Weapon", key="add"),
                          sg.Combo(adding, size=(10, 1), key="wp", enable_events=True),
-                         sg.T("#"), sg.InputText(key="amount", size=(5, 1))])
+                         sg.T("#"), sg.InputText(key="amount", size=(5, 1))])  # Editor of weapons.
     type_layout.append([sg.T("Change Type:", size=(6, 1)), sg.Combo(types, size=(10, 1), key="type"),
-                        sg.B("Change", tooltip="WARNING - Will erase the unit weapons!")])
-    year_layout.append([sg.T("Unit year: ", size=(8, 1)), sg.InputText(f"{unit.year}", key="uyear", size=(4, 1))])
-
+                        sg.B("Change", tooltip="WARNING - Will erase the unit weapons!")])  # Editor of Type-Erases sys.
+    year_layout.append([sg.T("Unit year: ", size=(8, 1)), sg.InputText(f"{unit.year}", key="uyear", size=(4, 1)),
+                        sg.B("Edit", key="eyear")])
+    frame_layout.append([sg.B("Modify", key="wmodify")])
     frame_layout.append([sg.Col(column)])
-    layout.append([sg.Button("Modify / Close"), sg.T(f"Unit: {unit}")])
+    layout.append([sg.B("Close"), sg.T(f"Unit: {unit}")])
     layout.append([sg.Frame("Year Editor", year_layout, font='Any 12', title_color='white')])
     layout[-1].append(sg.Frame("Type Editor", type_layout, font='Any 12', title_color='white'))
     layout.append([sg.Frame("Systems Editor", frame_layout, font='Any 12', title_color='white')])
 
     menu_def = [['&Edit', ['Units', '---', 'Exit']], ['&Properties', ["&Switch default editing"]]]
     layout.append([sg.Menu(menu_def)])
-
     window = sg.Window(f'Battle System {stats[3]}', layout, resizable=True,
                        size=(600, 600), return_keyboard_events=True)
 
-    while True:  # Working with the grid inputs, checking and adding to assets.
+    while True:
         event, values = window.read()
-        if event in (None, "Exit"):
+        if event in (None, "Exit"):  # User closes window or presses Exit button.
             exit()
-        elif event in ("Modify / Close", "\r"):  # Save & Close
-            for item in unit.systems.copy():
-                if not default:
-                    if item < 90 and unit.systems[item] != values[eq_systems[unit.type[0]][item]]:
-                        unit.systems[item] = int(values[eq_systems[unit.type[0]][item]])
-                    if item < 90 and unit.systems[item] == 0:
-                        unit.systems.pop(item)
-                else:
-                    if unit.systems[item] != values[eq_systems[unit.type[0]][item]]:
-                        unit.systems[item] = int(values[eq_systems[unit.type[0]][item]])
-                    if unit.systems[item] == 0:
-                        unit.systems.pop(item)
-            if unit.year != values["uyear"] and user_input(values["uyear"], minimum=stats[4][0], maximum=stats[4][1]):
-                unit.year = values["uyear"]
+        elif event == "Close":  # User presses Close button to get back to units.
             break
-        elif event == "add":
-            for _ in eq_systems[unit.type[0]]:
-                if values["wp"] == eq_systems[unit.type[0]][_][0] and int(values["amount"]) == 0:
-                    if _ in unit.systems:
-                        unit.systems.pop(_)
-                        break
-                elif values["wp"] == eq_systems[unit.type[0]][_][0] and \
-                        user_input(values["amount"], minimum=1, maximum=400):
-                    unit.systems[_] = values["amount"]
-                    break
+        elif event == "Switch default editing":  # Switches default mode.
             window.close()
-            oob_edit(sides, stats, unit, default)
-        elif event == "Switch default editing":
-            window.close()
-            if default:
-                oob_edit(sides, stats, unit)
-            else:
-                oob_edit(sides, stats, unit, True)
-        elif event == "Change":
+            default = not default
+            oob_edit(sides, stats, unit, default=default)
+        elif event == "Change":  # Changes unit type completely.
             for vehicle in vehicles_internal:
                 if values["type"] == vehicles_internal[vehicle]:
                     unit.type = category(vehicle)  # Class and subclass
@@ -532,8 +498,29 @@ def oob_edit(sides, stats, unit, default=False):
                     unit.systems = unit.default_eq(unit)
                     window.close()
                     oob_edit(sides, stats, unit, default)
-        elif event == "Units":
+        elif event == "eyear":  # Modify unit year.
+            if unit.year != values["uyear"] and user_input(values["uyear"], minimum=stats[4][0], maximum=stats[4][1]):
+                unit.year = values["uyear"]  # Checks and assigns new unit year.
+                window.close()
+                oob_edit(sides, stats, unit, default)
+        elif event == "add":  # Add weapons or modify them with 0.
+            for _ in eq_systems[unit.type[0]]:
+                if values["wp"] == eq_systems[unit.type[0]][_][0]:
+                    unit.add_system(_, values["amount"], default)
+                    break
+            window.close()
+            oob_edit(sides, stats, unit, default)
+        elif event == "Units":  # Show unit tab view only.
             oob_units(sides, stats, view_only=True)
+        elif event == "wmodify":  # Add weapons or modify them with 0.
+            for system in unit.systems.copy():
+                for value in values.keys():
+                    if value == eq_systems[unit.type[0]][system][0] and \
+                            unit.systems[unit.define_system(value, True)] != values[value]:
+                        unit.add_system(system, values[value], default)
+                        break
+            window.close()
+            oob_edit(sides, stats, unit, default)
     window.close()
     oob_units(sides, stats, default=default)
 
@@ -595,6 +582,8 @@ eq_systems = {
 state = ["KIA", "Heavily Damaged", "Major Damage taken", "Damaged", "Slightly damaged", "Scratched",
          "In nominal condition", "Worried", "New", "Withdrawing", "unknown"]
 
+return_type = lambda x: "Surface Units" if x == 1 else ("Naval Units" if x == 2 else "Aerial Units")
+
 
 def category(unit):
     """
@@ -628,19 +617,15 @@ def user_input(value, minimum=0, maximum=1, enter=False, string=False, check="",
     """
     from re import match
     try:
-        if string and match(check, value) is not None:
+        if (string and match(check, value) is not None) or minimum <= int(value) <= maximum or enter:
             return True
-        elif minimum <= int(value) <= maximum:
-            return True
-        elif enter:
-            return True
-        if not skip:
+        elif not skip:
             sg.PopupAutoClose("Invalid input!", auto_close_duration=1)
         return False
     except ValueError:
         if enter:
             return True
-        if not skip:
+        elif not skip:
             sg.PopupAutoClose("Invalid input!", auto_close_duration=1)
         return False
 
@@ -652,25 +637,20 @@ def cut(unit):
     @return:
     """
     if isinstance(unit, str):
-        result = unit.replace("asset", "")
+        return unit.replace("asset", "")
     else:
-        result = unit.name.replace("asset", "")
-    return result
-
-
-def return_type(num):
-    """
-
-    @param num:
-    @return:
-    """
-    if num == 1:
-        return "Surface Units"
-    elif num == 2:
-        return "Aerial Units"
-    else:
-        return "Naval Units"
+        return unit.name.replace("asset", "")
 
 
 if __name__ == "__main__":
+    import traceback
+
     oob()
+    try:
+        oob()
+    except Exception as e:
+        print(f"Program crashed with this error: {e}, {type(e)}, {e.args}, \nPlease report the error to the "
+              f"developers.\n")
+        print(traceback.format_exc())
+        input("Program will restart after pressing enter (in console):")
+        oob()
