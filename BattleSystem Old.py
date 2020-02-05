@@ -30,7 +30,7 @@ class Asset:
         self.systems = self.default_eq(self)
         self.has_radar = has_radar(unit_type)
 
-        self.is_withdrawing = False
+        self.is_withdrawing = 0
         self.oversaturated = []
         self.turn = 0
 
@@ -94,93 +94,138 @@ class Asset:
         except ValueError:
             sg.popup_auto_close("Wrong input", auto_close_duration=1)
 
-    def search(self, sides, stats):
+    def attack(self, sides, stats):
         """
-
+        @todo maybe add attacking same target with more assets by sending the target between then to coordinate
+        at 50/50 chance
         @param sides:
         @param stats:
-        @return:
         """
-        targets = {"denied": [], "attacked": {}, "weapons": {}}
+
+        targets = {"denied": [], "attacked": {}}
         dist_calc = lambda x, y: abs(x - y)
 
         while not len(sides[self.side[2]]) == len(targets["attacked"]) + len(targets["denied"]):
+            attacked = False
             if len(sides[self.side[2]]) > 0:
                 target = sides[self.side[2]][random.randint(0, len(sides[self.side[2]]) - 1)]
             if target not in targets["denied"] and target.type[0] not in targets["attacked"]:
-                attackable = False
                 for weapon in self.systems:
-                    if ((target.type[0] in eq_systems[self.type[0]][weapon][2])
-                        or (eq_systems[self.type[0]][weapon][2] == 6 and target.has_radar)) \
+                    if (target.type[0] in eq_systems[self.type[0]][weapon][2]) \
+                            or (eq_systems[self.type[0]][weapon][2] == 6 and target.has_radar) \
                             and dist_calc(self.distance, target.distance) <= eq_systems[self.type[0]][weapon][3]:
                         # Successful weapon <=> target <=> distance lock | OR | SEAD mechanics.
-                        targets["attacked"][target.type[0]] = target
-                        targets["weapons"][target.type[0]] = weapon
-                        print(f"{self} > {target} | {weapon}")
-                        attackable = True
-                if not attackable:
+                        alive = target.hit(self, weapon, sides, stats)
+                        if alive > 0:
+                            targets["attacked"][target.type[0]] = target
+                        else:
+                            targets["attacked"][target.type[0]] = 0
+                        attacked = True
+                        break
+                if not attacked:  # When target type is correct but no weapon can engage them.
                     targets["denied"].append(target)
-            else:
+            else:  # When target type was already attacked that turn.
                 targets["denied"].append(target)
+            if not len(sides[1]) > 0 < len(sides[2]):
+                return
 
-        return targets
+        self.dist()
 
-    def status(self, sides, stats):
+    def dist(self):
+        """
+        YES
+        """
+        self.turn += 1
+
+        if self.is_withdrawing == 0 and not self.distance == 0:  # Normal move
+            self.distance -= 1 * self.side[1]
+        elif self.is_withdrawing == 1:  # Withdraw
+            self.distance += 2 * self.side[1]
+        elif self.is_withdrawing == 2:  # Pursue
+            self.distance -= 2 * self.side[1]
+
+    def hit(self, aggressor, weapon, sides, stats):
+        """
+        @todo add pursue mechanics based on enemy withdraw variables
+
+        @param aggressor:
+        @param weapon:
+        @param sides:
+        @param stats:
+        """
+        if aggressor.year - 1945 + random.randint(0, 60) > 50:
+            probability = self.cm(weapon)
+            damage = 0
+            if probability > 80:  # Critical
+                damage = (eq_systems[aggressor.type[0]][weapon][1] * 2) + random.randint(-2, 3)
+            elif probability > 40:  # Normal hit
+                damage = eq_systems[aggressor.type[0]][weapon][1] + random.randint(-1, 1)
+            else:  # no hit
+                pass
+            self.state[0] -= damage
+
+        self.database(sides, stats, weapon)
+
+        print(f"BOOM {aggressor.name} > {self.name} | {damage} | {aggressor.define_system(weapon)}")
+        return self.state[0]
+
+    def database(self, sides, stats, weapon=0):
         """
 
         @param sides:
         @param stats:
-        @return:
+        @param weapon:
         """
-        pursue = True
-        self.turn += 1
-
-        if self.state[0] < 0:
-            stats[6][0].append(self)
-            for system in self.systems:
-                stats[6][3][self.side][system] = self.systems[system]
-            sides[self.side[0]].pop(self)
-            return
-        elif not self.is_withdrawing and self.state[0] < vehicles[self.type[0]][self.type[1]][2] \
-                and random.randint(0, 100) > 50:
-            self.is_withdrawing = True
-        elif self.is_withdrawing and -9 > self.distance > 9:
-            self.distance += 2 * self.side[1]
-        elif self.is_withdrawing:
+        if 90 > weapon != 0 and stats[6][2].get(weapon, 0) != 0:
+            stats[6][2][weapon] = 1
+        elif 90 > weapon != 0:
+            stats[6][2][weapon] += 1
+        if self.state[0] <= 0:
+            for i in range(len(sides[self.side[0]])):
+                if sides[self.side[0]][i].name == self.name:
+                    sides[self.side[0]].pop(i)
+                    break
             stats[6][1].append(self)
-            sides[self.side[0]].pop(self)
-            return
+        else:
+            self.set_state()
+        if 0 < self.state[0] < vehicles[self.type[0]][self.type[1]][2] // 2 and random.randint(30, 100) >= 50:
+            self.is_withdrawing = True
+        if self.state[0] > 0 and 9 < self.distance < -9 and self.is_withdrawing:
+            for i in range(len(sides[self.side[0]])):
+                if sides[self.side[0]][i].name == self.name:
+                    sides[self.side[0]].pop(i)
+                    break
+            stats[6][0].append(self)
 
-        for enemy in sides[self.side[2]]:
-            if not enemy.is_withdrawing:
-                pursue = False
-                break
-
-        if pursue:  # Pursue
-            self.distance -= 2 * self.side[1]
-        elif self.distance != 0:  # Normal
-            self.distance -= 1 * self.side[1]
+    def cm(self, weapon):
+        """
+        Countermeasures
+        @param weapon:
+        """
+        probability = 70 + random.randint(-30, 30) + (self.type[0] * 2)
+        for sys in self.systems:
+            if (8, 9) in eq_systems[self.type[0]][sys][2] and weapon < 90 and sys not in self.oversaturated:
+                probability -= random.randint(eq_systems[self.type[0]][sys][1] * self.systems[sys] * 4,
+                                              eq_systems[self.type[0]][sys][1] * self.systems[sys] * 10)
+                if 9 in eq_systems[self.type[0]][sys][2]:
+                    self.systems[sys] -= 1
+                    if self.systems[sys] <= 0:
+                        self.systems.pop(sys)
+                self.oversaturated.append(sys)
+            elif self.type[0] == 2 and sys == 14:
+                probability += 20
+        return probability
 
 
 def battle_turn(sides, stats):
     """
-    @param stats:
-        0 - Default Year
-        1,2 - Unused
-        3 - Program version
-        4 - List:
-            0 Minimal
-            1 maximal year
-        5 - Turn number
-        6 - Database:
-            0 - Destroyed Units
-            1 - Withdrawn Units
-            2 - List - 0 - SideA consumed systems, 1 - SideB consumed systems
 
+    @param stats:
     @param sides:
-        1 - Side A Unit Objects
-        2 - Side B Unit Objects
     """
+
+    stats.append(0)
+    stats.append([[], [], {}])  # Stats 6[x] withdrawn, destroyed, used systems per side.
 
     sg.theme('DarkBlue13')
     layout = []
@@ -195,16 +240,15 @@ def battle_turn(sides, stats):
     window = sg.Window(f'Battle System {stats[3]}', layout, resizable=True,
                        size=(600, 600), return_keyboard_events=True)
 
-    while True:
+    while len(sides[1]) > 0 < len(sides[2]):
         event, values = window.read()
         if event in (None, "Exit"):  # User closes window or presses Exit button.
             exit()
         elif event in ("Next Turn", "\r"):  # User presses Next button to get to the next turn.
             for unit in sides[1] + sides[2]:
-                # targets = unit.search(sides, stats)
-
-                # unit.attack(sides, stats, targets)
-                unit.status(sides, stats)
+                unit.attack(sides, stats)
+            for unit in sides[1] + sides[2]:
+                unit.oversaturated = []
             stats[5] += 1  # Adding turn +1
             break
         elif event == "Units":  # Show unit tab view only.
@@ -212,6 +256,74 @@ def battle_turn(sides, stats):
 
     window.close()
     return stats
+
+
+def battle_finalize(sides, stats):
+    """
+
+    @param sides:
+    @param stats:
+    """
+    sg.theme('DarkBlue13')
+    layout = []
+    missiles = []
+    destroyed = []
+    withdrawn = []
+    surviving = []
+
+    for unit in sides[1] + sides[2]:
+        surviving.append([sg.T(f"{unit.name} | {unit.distance} | {unit.state[0]} | ")])
+        systems = ""
+        counter = 0
+        for item in unit.systems:
+            counter += 1
+            if counter <= 6:  # Overflow prevention adding another row with \n.
+                systems += f"{unit.define_system(item)}: {unit.systems[item]}, "  # Adds to systems.
+            else:
+                systems += f"\n{unit.define_system(item)}: {unit.systems[item]}, "
+                counter = 0
+        surviving[-1].append(sg.T(f"{systems}", key=f"{cut(unit)}"))
+    for unit in stats[6][1]:
+        withdrawn.append([sg.T(f"{unit.name} | {unit.distance} | {unit.state[0]} | ")])
+        systems = ""
+        counter = 0
+        for item in unit.systems:
+            counter += 1
+            if counter <= 6:  # Overflow prevention adding another row with \n.
+                systems += f"{unit.define_system(item)}: {unit.systems[item]}, "  # Adds to systems.
+            else:
+                systems += f"\n{unit.define_system(item)}: {unit.systems[item]}, "
+                counter = 0
+        withdrawn[-1].append(sg.T(f"{systems}", key=f"{cut(unit)}"))
+    for unit in stats[6][0]:
+        destroyed.append([sg.T(f"{unit.name} | {unit.distance} ")])
+    for item in stats[6][2]:
+        missiles.append(sg.T(f"{item}"))
+
+    menu_def = [['&Edit', ['Units', '---', 'Exit']], ['&Properties', []]]
+    layout.append([sg.Menu(menu_def)])
+
+    layout.append([sg.T(f"Battle Simulator - Ended at turn: {stats[5]}")])
+    layout.append([sg.Frame('Surviving Assets', surviving, font='Any 12', title_color='white')])
+    layout[-1].append(sg.Frame('Lost Assets', destroyed, font='Any 12', title_color='white'))
+    layout.append([sg.Frame('Withdrawn Assets', withdrawn, font='Any 12', title_color='white')])
+    layout[-1].append(sg.Frame('Lost Systems', missiles, font='Any 12', title_color='white'))
+    layout.append([sg.B("Close results", size=(20, 5), button_color=("#000000", "#dbc867"))])
+    window = sg.Window(f'Battle System {stats[3]}', layout, resizable=True,
+                       size=(1200, 600), return_keyboard_events=True)
+
+    # TODO Add one column for surviving, retreated, destroyed and fired systems.
+
+    while sides[1] is not None or sides[2] is not None:
+        event, values = window.read()
+        if event in (None, "Exit"):  # User closes window or presses Exit button.
+            exit()
+        elif event == "Close results":  # User presses Next button to get to the next turn.
+            break
+        elif event == "Units":  # Show unit tab view only.
+            oob_units(sides, stats, view_only=True)
+
+    window.close()
 
 
 def oob():
@@ -232,15 +344,11 @@ def oob():
                 cont = True
                 break
         if cont:
-            oob_eq(sides, stats, i, unit)
+            oob_eq(sides, stats, i)
 
     oob_units(sides, stats)
-
-    stats.append(0)
-    stats.append([[], [], [{}, {}]])
-
-    while len(sides[1]) > 0 < len(sides[2]):
-        stats = battle_turn(sides, stats)
+    stats = battle_turn(sides, stats)
+    battle_finalize(sides, stats)
 
 
 # noinspection SpellCheckingInspection
@@ -398,13 +506,15 @@ def oob_asset_creator(stats, side1, side2, i=1):  # Stats 0 def_year, 1 side_a, 
     return {1: side1, 2: side2}
 
 
-def oob_eq(sides, stats, unit_type, template):
+def oob_eq(sides, stats, unit_type):
     """
     Equips unit with dictionary of weapon: amount.
     @param unit_type: Unit type.
     @param sides: All objects.
     @param stats: Program stats.
     """
+
+    template_unit = Asset("template_unit", 1, 1, 2000)
 
     sg.theme('DarkBlue13')
     layout = [[sg.T(f"Equipment Editor - {return_type(unit_type)}", justification="center")],
@@ -424,7 +534,7 @@ def oob_eq(sides, stats, unit_type, template):
             if item < 90:
                 if not i == 2:  # Prints left column of weapons for this type of units.
                     # noinspection PyUnboundLocalVariable
-                    leftcol.append([sg.T(f"{template.define_system(item)}", size=(14, 1))])
+                    leftcol.append([sg.T(f"{asset.define_system(item)}", size=(14, 1))])
                 column.append([])  # Adds new row for each iteration bellow.
                 for asset in sides[i]:  # Iterate in one side.
                     if asset.type[0] == unit_type and item in vehicles[asset.type[0]][asset.type[1]][1]:
@@ -837,7 +947,6 @@ def unit_listing(sides, col):
 if __name__ == "__main__":
     import traceback
 
-    oob()
     try:
         oob()
     except Exception as e:
