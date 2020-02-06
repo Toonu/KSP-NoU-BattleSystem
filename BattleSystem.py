@@ -110,14 +110,23 @@ class Asset:
             if len(sides[self.side[2]]) > 0:
                 target = sides[self.side[2]][random.randint(0, len(sides[self.side[2]]) - 1)]
             # noinspection PyUnboundLocalVariable
+
+            sead = False
+            for wp in self.systems:
+                if eq_systems[self.type[0]][wp][2] == 6:
+                    sead = True
+                    break
+
             if target not in targets["denied"] and target.type[0] not in targets["attacked"]:
                 attackable = False
-
+                max_dmg = 0
                 for weapon in self.systems:
-                    if ((target.type[0] in eq_systems[self.type[0]][weapon][2])
-                        or (eq_systems[self.type[0]][weapon][2] == 6 and target.has_radar)) \
-                            and dist_calc(self.distance, target.distance) <= eq_systems[self.type[0]][weapon][3]:
-                        # Successful weapon <=> target <=> distance lock | OR | SEAD mechanics.
+                    if (target.type[0] in eq_systems[self.type[0]][weapon][2] or (target.has_radar and sead)) and \
+                            dist_calc(self.distance, target.distance) <= eq_systems[self.type[0]][weapon][3] and \
+                            eq_systems[self.type[0]][weapon][1] > max_dmg:
+                        # Successful weapon <=> target <=> distance lock | OR | SEAD mechanics + max dmg weapon chosen.
+                        max_dmg = eq_systems[self.type[0]][weapon][1]
+
                         targets["attacked"][target.type[0]] = target
                         targets["weapons"][target.type[0]] = weapon
                         attackable = True
