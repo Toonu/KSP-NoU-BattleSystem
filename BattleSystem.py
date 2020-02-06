@@ -89,17 +89,19 @@ class Asset:
                 self.systems[system] = int(amount)
             elif system < 90 and int(amount) > 0 and system in vehicles[self.type[0]][self.type[1]][1]:
                 self.systems[system] = int(amount)
-            elif system in self.systems:
+            elif default and system in self.systems:
                 self.systems.pop(system)
+            elif system in self.systems:
+                self.systems[system] = int(amount)
         except ValueError:
             sg.popup_auto_close("Wrong input", auto_close_duration=1)
 
     def search(self, sides, stats):
         """
-
-        @param sides:
-        @param stats:
-        @return:
+        Find enemy object of each unit category including SEAD mechanics. Makes list of enemies and returns it.
+        @param sides: Two sides of unit objects.
+        @param stats: General Database of lists and main informations used through the program.
+        @return: List of dictionaries of enemy to be attacked.
         """
         targets = {"denied": [], "attacked": {}, "weapons": {}}
         dist_calc = lambda x, y: abs(x - y)
@@ -107,8 +109,10 @@ class Asset:
         while not len(sides[self.side[2]]) == len(targets["attacked"]) + len(targets["denied"]):
             if len(sides[self.side[2]]) > 0:
                 target = sides[self.side[2]][random.randint(0, len(sides[self.side[2]]) - 1)]
+            # noinspection PyUnboundLocalVariable
             if target not in targets["denied"] and target.type[0] not in targets["attacked"]:
                 attackable = False
+
                 for weapon in self.systems:
                     if ((target.type[0] in eq_systems[self.type[0]][weapon][2])
                         or (eq_systems[self.type[0]][weapon][2] == 6 and target.has_radar)) \
@@ -116,54 +120,61 @@ class Asset:
                         # Successful weapon <=> target <=> distance lock | OR | SEAD mechanics.
                         targets["attacked"][target.type[0]] = target
                         targets["weapons"][target.type[0]] = weapon
-                        print(f"{self} > {target} | {weapon}")
                         attackable = True
                 if not attackable:
                     targets["denied"].append(target)
             else:
                 targets["denied"].append(target)
-
+        for target in targets["attacked"]:
+            for weapon in targets["weapons"]:
+                if targets["attacked"][target].type[0] in eq_systems[self.type[0]][targets["weapons"][weapon]][2]:
+                    print(f"{self} > {targets['attacked'][target]} | {self.define_system(targets['weapons'][weapon])}")
         return targets
 
     def status(self, sides, stats):
         """
-
-        @param sides:
-        @param stats:
-        @return:
+        Modify unit object distance, turn number, withdraw and pursue moves and adds it to the database when withdrawn
+        or destroyed including its weapons.
+        @param sides: Two sides of unit objects.
+        @param stats: General Database of lists and main informations used through the program.
+        @return: Returns modified stats updated with new informations.
         """
         pursue = True
         self.turn += 1
 
-        if self.state[0] < 0:
+        if self.state[0] <= 0:
             stats[6][0].append(self)
             for system in self.systems:
-                stats[6][3][self.side][system] = self.systems[system]
-            sides[self.side[0]].pop(self)
+                try:
+                    stats[6][2][self.side[0]][self.define_system(system)] += self.systems[system]
+                except KeyError:
+                    stats[6][2][self.side[0]][self.define_system(system)] = self.systems[system]
+            sides[self.side[0]].remove(self)
             return
         elif not self.is_withdrawing and self.state[0] < vehicles[self.type[0]][self.type[1]][2] \
                 and random.randint(0, 100) > 50:
             self.is_withdrawing = True
-        elif self.is_withdrawing and -9 > self.distance > 9:
-            self.distance += 2 * self.side[1]
-        elif self.is_withdrawing:
+        elif self.is_withdrawing and (self.distance < -9 or self.distance > 9):
             stats[6][1].append(self)
-            sides[self.side[0]].pop(self)
+            sides[self.side[0]].remove(self)
             return
+        elif self.is_withdrawing:
+            self.distance += 2 * self.side[1]
 
         for enemy in sides[self.side[2]]:
             if not enemy.is_withdrawing:
                 pursue = False
                 break
 
-        if pursue:  # Pursue
+        if pursue and -10 < self.distance < 10:  # Pursue
             self.distance -= 2 * self.side[1]
-        elif self.distance != 0:  # Normal
+        elif self.distance != 0 and -10 < self.distance < 10:  # Normal
             self.distance -= 1 * self.side[1]
 
 
-def battle_turn(sides, stats):
+def battle_turn(sides, stats, dmg=False):
     """
+    @param dmg:
     @param stats:
         0 - Default Year
         1,2 - Unused
@@ -175,7 +186,7 @@ def battle_turn(sides, stats):
         6 - Database:
             0 - Destroyed Units
             1 - Withdrawn Units
-            2 - List - 0 - SideA consumed systems, 1 - SideB consumed systems
+            2 - List - 1 - SideA consumed systems, 2 - SideB consumed systems
 
     @param sides:
         1 - Side A Unit Objects
@@ -200,18 +211,64 @@ def battle_turn(sides, stats):
         if event in (None, "Exit"):  # User closes window or presses Exit button.
             exit()
         elif event in ("Next Turn", "\r"):  # User presses Next button to get to the next turn.
+            print()
             for unit in sides[1] + sides[2]:
-                # targets = unit.search(sides, stats)
-
+                targets = unit.search(sides, stats)
                 # unit.attack(sides, stats, targets)
                 unit.status(sides, stats)
             stats[5] += 1  # Adding turn +1
             break
         elif event == "Units":  # Show unit tab view only.
             oob_units(sides, stats, view_only=True)
-
+        elif event == "h:72":
+            dmg = True
+            break
+        elif "Damage-" in event and dmg:
+            name = "asset" + event.replace("Damage-", "")  # Getting assetx_y name from button key (event).
+            for unit in sides[1] + sides[2]:
+                if unit.name == name:
+                    unit.state[0] -= 4
+                    unit.state[1] = unit.set_state()
+                    dmg = True
+                    break
+            break
     window.close()
-    return stats
+    return stats, dmg
+
+
+def final(sides, stats):
+    """
+    Prints out results of the battle from stats and sides lists.
+    @param sides: Two sides of unit objects.
+    @param stats: General Database of lists and main informations used through the program.
+    """
+    print("\nWinning Side\n")
+    for unit in sides[1] + sides[2]:
+        print(unit)
+    print("\nDestroyed: \n")
+    for destroyed in stats[6][0]:
+        print(destroyed)
+    print("\nSurvived: \n")
+    for survived in stats[6][1]:
+        print(survived)
+    print("\nLost or Fired Weapons Side A")
+    try:
+        for system, value in stats[6][2][1].items():
+            if len(str(value)) <= 1:  # Align the values with spaces for better look.
+                value = str(value) + "   "
+            elif len(str(value)) <= 2:
+                value = str(value) + "  "
+            elif len(str(value)) <= 3:
+                value = str(value) + " "
+            print(f"{value} | {system} ")
+    except IndexError:
+        pass
+    print("\nLost or Fired Weapons Side B")
+    try:
+        for system, value in stats[6][2][2].items():
+            print(f"{system} {value}")
+    except IndexError:
+        pass
 
 
 def oob():
@@ -232,15 +289,19 @@ def oob():
                 cont = True
                 break
         if cont:
+            # noinspection PyUnboundLocalVariable
             oob_eq(sides, stats, i, unit)
 
     oob_units(sides, stats)
 
     stats.append(0)
-    stats.append([[], [], [{}, {}]])
+    stats.append([[], [], {1: {}, 2: {}}])
 
+    values = False  # Handles special damage mode of battle_turn
     while len(sides[1]) > 0 < len(sides[2]):
-        stats = battle_turn(sides, stats)
+        stats, values = battle_turn(sides, stats, values)
+
+    final(sides, stats)
 
 
 # noinspection SpellCheckingInspection
@@ -362,10 +423,10 @@ def oob_asset_creator(stats, side1, side2, i=1):  # Stats 0 def_year, 1 side_a, 
                              sg.Tab('Aerial Unit', tab2_layout),
                              sg.Tab('Naval Unit', tab3_layout)]]),
                sg.T(f"Assets remaining: {stats[i]}\nSide: {i}", key="rem")],
-              [sg.T("Amount:             "), sg.In(justification="center")],
+              [sg.T("Amount:             ", ), sg.In(justification="center", focus=True)],
               [sg.T("Year if different:  "), sg.In(f"{stats[0]}", justification="center")],
               [sg.Button('Next', size=(20, 2), button_color=("#000000", "#dbc867"))]]
-    window = sg.Window(f'Battle System {stats[3]}', layout, return_keyboard_events=True)
+    window = sg.Window(f'Battle System {stats[3]}', layout, return_keyboard_events=True, use_default_focus=False)
 
     while True:
         length = 0
@@ -401,6 +462,7 @@ def oob_asset_creator(stats, side1, side2, i=1):  # Stats 0 def_year, 1 side_a, 
 def oob_eq(sides, stats, unit_type, template):
     """
     Equips unit with dictionary of weapon: amount.
+    @param template: Default craft to mirror in the systems used.
     @param unit_type: Unit type.
     @param sides: All objects.
     @param stats: Program stats.
@@ -529,6 +591,7 @@ def oob_units(sides, stats, clone=None, default=False, view_only=False):
                     clone = copy.deepcopy(unit.systems)  # Clone source unit whole dictionary of systems.
             window.close()
             oob_units(sides, stats, clone, default)  # Reload window with copied memory.
+            break
         elif "Paste-" in event and clone is not None:  # Pasting
             name = "asset" + event.replace("Paste-", "")  # Getting assetx_y name from button key (event).
             for unit in sides[1] + sides[2]:
@@ -538,10 +601,12 @@ def oob_units(sides, stats, clone=None, default=False, view_only=False):
                             unit.add_system(item, clone[item], default)  # If default false, over 90 aren't allowed.
             window.close()
             oob_units(sides, stats, clone, default)  # Reload window copied items.
+            break
         elif event == "Switch default editing" and not view_only:
             window.close()
             default = not default  # Switch default to opposite.
             oob_units(sides, stats, default=default)
+            break
         elif event in ("\r", "battle"):  # Finalises this stage and goes into next window.
             break
         elif event == "Refresh":
@@ -553,6 +618,9 @@ def oob_units(sides, stats, clone=None, default=False, view_only=False):
                 if unit.name == event:
                     window.close()
                     oob_edit(sides, stats, unit, default=default)
+                    break
+            break
+
     window.close()
 
 
@@ -749,7 +817,7 @@ eq_systems = {
 state = ["KIA", "Heavily Damaged", "Major Damage taken", "Damaged", "Slightly damaged", "Scratched",
          "In nominal condition", "Worried", "New", "Withdrawing", "unknown"]
 
-return_type = lambda x: "Surface Units" if x == 1 else ("Naval Units" if x == 2 else "Aerial Units")
+return_type = lambda x: "Surface Units" if x == 1 else ("Naval Units" if x == 3 else "Aerial Units")
 
 
 def category(unit):
@@ -820,7 +888,8 @@ def unit_listing(sides, col):
         for unit in sides.copy():  # Listing of units.
             systems = "Eq: "
             counter = 0
-            col.append([sg.T(f"{unit.name} | {unit.distance} | {unit.state[0]} | ")])
+            col.append([sg.T(f"{unit.name} | {unit.distance} | {unit.state[0]} | ", key=f"{cut(unit)} ",
+                             right_click_menu=['&Right', [f"Damage-{cut(unit)}"]])])
             for item in unit.systems:
                 counter += 1
                 if counter <= 6:  # Overflow prevention adding another row with \n.
