@@ -89,10 +89,11 @@ class Asset:
                 self.systems[system] = int(amount)
             elif system < 90 and int(amount) > 0 and system in vehicles[self.type[0]][self.type[1]][1]:
                 self.systems[system] = int(amount)
-            elif default and system in self.systems:
+            elif default and int(amount) <= 0 and system in self.systems:
                 self.systems.pop(system)
-            elif system in self.systems:
-                self.systems[system] = int(amount)
+            elif system in self.systems and int(amount) <= 0:
+                self.systems.pop(system)
+
         except ValueError:
             sg.popup_auto_close("Wrong input", auto_close_duration=1)
 
@@ -106,24 +107,31 @@ class Asset:
         targets = {"denied": [], "attacked": {}, "weapons": {}}
         dist_calc = lambda x, y: abs(x - y)
 
+        sead = False
         while not len(sides[self.side[2]]) == len(targets["attacked"]) + len(targets["denied"]):
+            for weapon in self.systems:  # SEAD Mechanics bypassing normal targeting.
+                if sead:
+                    break
+                if 6 in eq_systems[self.type[0]][weapon][2]:
+                    sead = True
+                    for target in sides[self.side[2]]:
+                        if target.has_radar:
+                            targets["attacked"][target.type[0]] = target
+                            targets["weapons"][target.type[0]] = weapon
+                            break
+                    break
+
             if len(sides[self.side[2]]) > 0:
                 target = sides[self.side[2]][random.randint(0, len(sides[self.side[2]]) - 1)]
             # noinspection PyUnboundLocalVariable
-
-            sead = False
-            for wp in self.systems:
-                if eq_systems[self.type[0]][wp][2] == 6:
-                    sead = True
-                    break
 
             if target not in targets["denied"] and target.type[0] not in targets["attacked"]:
                 attackable = False
                 max_dmg = 0
                 for weapon in self.systems:
                     if (target.type[0] in eq_systems[self.type[0]][weapon][2] or (target.has_radar and sead)) and \
-                            dist_calc(self.distance, target.distance) <= eq_systems[self.type[0]][weapon][3] and \
                             eq_systems[self.type[0]][weapon][1] > max_dmg:
+                        # dist_calc(self.distance, target.distance) <= eq_systems[self.type[0]][weapon][3] and
                         # Successful weapon <=> target <=> distance lock | OR | SEAD mechanics + max dmg weapon chosen.
                         max_dmg = eq_systems[self.type[0]][weapon][1]
 
@@ -132,12 +140,10 @@ class Asset:
                         attackable = True
                 if not attackable:
                     targets["denied"].append(target)
-            else:
+            elif target not in targets["denied"]:
                 targets["denied"].append(target)
         for target in targets["attacked"]:
-            for weapon in targets["weapons"]:
-                if targets["attacked"][target].type[0] in eq_systems[self.type[0]][targets["weapons"][weapon]][2]:
-                    print(f"{self} > {targets['attacked'][target]} | {self.define_system(targets['weapons'][weapon])}")
+            print(f"{self} >>> {targets['attacked'][target]} | {self.define_system(targets['weapons'][target])}")
         return targets
 
     def status(self, sides, stats):
@@ -591,7 +597,7 @@ def oob_units(sides, stats, clone=None, default=False, view_only=False):
             if not view_only:
                 exit()
             break
-        elif "Copy-" in event:  # Copying
+        elif "Copy-" in event and not view_only:  # Copying
             clone = {}
             name = "asset" + event.replace("Copy-", "")  # Getting assetx_y name from button key (event).
             for unit in sides[1] + sides[2]:
@@ -601,10 +607,11 @@ def oob_units(sides, stats, clone=None, default=False, view_only=False):
             window.close()
             oob_units(sides, stats, clone, default)  # Reload window with copied memory.
             break
-        elif "Paste-" in event and clone is not None:  # Pasting
+        elif "Paste-" in event and clone is not None and not view_only:  # Pasting
             name = "asset" + event.replace("Paste-", "")  # Getting assetx_y name from button key (event).
             for unit in sides[1] + sides[2]:
                 if unit.name == name:
+                    unit.systems = unit.default_eq(unit)
                     for item in clone:
                         if item in vehicles[unit.type[0]][unit.type[1]][1]:
                             unit.add_system(item, clone[item], default)  # If default false, over 90 aren't allowed.
@@ -622,14 +629,11 @@ def oob_units(sides, stats, clone=None, default=False, view_only=False):
             window.close()
             oob_units(sides, stats, view_only=view_only)
             break
-        elif event is not None:  # Clicking any unit button opens the unit editor.
+        elif event is not None and not view_only:  # Clicking any unit button opens the unit editor.
             for unit in sides[1] + sides[2]:
                 if unit.name == event:
-                    window.close()
                     oob_edit(sides, stats, unit, default=default)
                     break
-            break
-
     window.close()
 
 
@@ -692,7 +696,7 @@ def oob_edit(sides, stats, unit, default=False):
         if event in (None, "Exit"):  # User closes window or presses Exit button.
             exit()
         elif event == "Close":  # User presses Close button to get back to units.
-            break
+            return
         elif event == "Switch default editing":  # Switches default mode.
             window.close()
             default = not default
@@ -731,7 +735,6 @@ def oob_edit(sides, stats, unit, default=False):
             window.close()
             oob_edit(sides, stats, unit, default)
     window.close()
-    oob_units(sides, stats, default=default)
 
 
 # noinspection SpellCheckingInspection
