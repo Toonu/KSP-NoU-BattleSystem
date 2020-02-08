@@ -97,18 +97,18 @@ class Asset:
         except ValueError:
             sg.popup_auto_close("Wrong input", auto_close_duration=1)
 
-    def search(self, sides, stats):
+    def search(self, sides):
         """
         Find enemy object of each unit category including SEAD mechanics. Makes list of enemies and returns it.
         @param sides: Two sides of unit objects.
-        @param stats: General Database of lists and main informations used through the program.
         @return: List of dictionaries of enemy to be attacked.
         """
-        targets = {"denied": [], "attacked": {}, "weapons": {}}
+        targets = {"denied": [], "attacking": {}, "weapon": {}}
         dist_calc = lambda x, y: abs(x - y)
 
         sead = False
-        while not len(sides[self.side[2]]) == len(targets["attacked"]) + len(targets["denied"]):
+
+        while not len(sides[self.side[2]]) == len(targets["attacking"]) + len(targets["denied"]):
             for weapon in self.systems:  # SEAD Mechanics bypassing normal targeting.
                 if sead:
                     break
@@ -125,7 +125,7 @@ class Asset:
                 target = sides[self.side[2]][random.randint(0, len(sides[self.side[2]]) - 1)]
             # noinspection PyUnboundLocalVariable
 
-            if target not in targets["denied"] and target.type[0] not in targets["attacked"]:
+            if target not in targets["denied"] and target.type[0] not in targets["attacking"]:
                 attackable = False
                 max_dmg = 0
                 for weapon in self.systems:
@@ -135,15 +135,15 @@ class Asset:
                         # Successful weapon <=> target <=> distance lock | OR | SEAD mechanics + max dmg weapon chosen.
                         max_dmg = eq_systems[self.type[0]][weapon][1]
 
-                        targets["attacked"][target.type[0]] = target
-                        targets["weapons"][target.type[0]] = weapon
+                        targets["attacking"][target.type[0]] = target
+                        targets["weapon"][target.type[0]] = weapon
                         attackable = True
                 if not attackable:
                     targets["denied"].append(target)
-            elif target not in targets["denied"]:
+            elif target not in targets["denied"] and target != targets["attacking"][target.type[0]]:
                 targets["denied"].append(target)
-        for target in targets["attacked"]:
-            print(f"{self} >>> {targets['attacked'][target]} | {self.define_system(targets['weapons'][target])}")
+        for target in targets["attacking"]:
+            print(f"{self} >>> {targets['attacking'][target]} | {self.define_system(targets['weapon'][target])}")
         return targets
 
     def status(self, sides, stats):
@@ -154,9 +154,6 @@ class Asset:
         @param stats: General Database of lists and main informations used through the program.
         @return: Returns modified stats updated with new informations.
         """
-        pursue = True
-        self.turn += 1
-
         if self.state[0] <= 0:
             stats[6][0].append(self)
             for system in self.systems:
@@ -173,8 +170,14 @@ class Asset:
             stats[6][1].append(self)
             sides[self.side[0]].remove(self)
             return
-        elif self.is_withdrawing:
-            self.distance += 2 * self.side[1]
+
+    def distanc(self, sides):
+        """
+
+        @param sides:
+        """
+        self.turn += 1
+        pursue = True
 
         for enemy in sides[self.side[2]]:
             if not enemy.is_withdrawing:
@@ -183,8 +186,18 @@ class Asset:
 
         if pursue and -10 < self.distance < 10:  # Pursue
             self.distance -= 2 * self.side[1]
+        elif self.is_withdrawing:  # Withdraw
+            self.distance += 2 * self.side[1]
         elif self.distance != 0 and -10 < self.distance < 10:  # Normal
             self.distance -= 1 * self.side[1]
+
+    def attack(self, aggressor, weapon):
+        """
+
+        @param aggressor:
+        @param weapon:
+        """
+        self.state[0] -= random.randint(0, 2)
 
 
 def battle_turn(sides, stats, dmg=False):
@@ -226,11 +239,17 @@ def battle_turn(sides, stats, dmg=False):
         if event in (None, "Exit"):  # User closes window or presses Exit button.
             exit()
         elif event in ("Next Turn", "\r"):  # User presses Next button to get to the next turn.
-            print()
+            print(f"Turn: {stats[5]}")
             for unit in sides[1] + sides[2]:
-                targets = unit.search(sides, stats)
-                # unit.attack(sides, stats, targets)
-                unit.status(sides, stats)
+                targets = unit.search(sides)
+                for i in range(1, 4):
+                    try:
+                        targets["attacking"][i].attack(unit, targets["weapon"][i])
+                        targets["attacking"][i].status(sides, stats)
+                    except KeyError:
+                        pass
+            for unit in sides[1] + sides[2]:  # Moving units per their status
+                unit.distanc(sides)
             stats[5] += 1  # Adding turn +1
             break
         elif event == "Units":  # Show unit tab view only.
@@ -307,7 +326,11 @@ def oob():
             # noinspection PyUnboundLocalVariable
             oob_eq(sides, stats, i, unit)
 
-    oob_units(sides, stats)
+    cont = True
+    default = False
+    clone = {}
+    while cont:
+        cont, default, clone = oob_units(sides, stats, clone, default)
 
     stats.append(0)
     stats.append([[], [], {1: {}, 2: {}}])
@@ -591,6 +614,8 @@ def oob_units(sides, stats, clone=None, default=False, view_only=False):
     window = sg.Window(f'Battle System {stats[3]}', layout, resizable=True, size=(600, 600),
                        return_keyboard_events=True)
 
+    cont = True
+
     while True:
         event, values = window.read()
         if event in (None, "Exit"):  # User closes with Close button or X.
@@ -598,15 +623,12 @@ def oob_units(sides, stats, clone=None, default=False, view_only=False):
                 exit()
             break
         elif "Copy-" in event and not view_only:  # Copying
-            clone = {}
             name = "asset" + event.replace("Copy-", "")  # Getting assetx_y name from button key (event).
             for unit in sides[1] + sides[2]:
                 if unit.name == name:
                     import copy
                     clone = copy.deepcopy(unit.systems)  # Clone source unit whole dictionary of systems.
-            window.close()
-            oob_units(sides, stats, clone, default)  # Reload window with copied memory.
-            break
+            break  # Reload window with copied memory.
         elif "Paste-" in event and clone is not None and not view_only:  # Pasting
             name = "asset" + event.replace("Paste-", "")  # Getting assetx_y name from button key (event).
             for unit in sides[1] + sides[2]:
@@ -615,26 +637,26 @@ def oob_units(sides, stats, clone=None, default=False, view_only=False):
                     for item in clone:
                         if item in vehicles[unit.type[0]][unit.type[1]][1]:
                             unit.add_system(item, clone[item], default)  # If default false, over 90 aren't allowed.
-            window.close()
-            oob_units(sides, stats, clone, default)  # Reload window copied items.
-            break
+            break  # Reload window copied items.
         elif event == "Switch default editing" and not view_only:
-            window.close()
             default = not default  # Switch default to opposite.
-            oob_units(sides, stats, default=default)
             break
         elif event in ("\r", "battle"):  # Finalises this stage and goes into next window.
+            cont = False
             break
         elif event == "Refresh":
-            window.close()
-            oob_units(sides, stats, view_only=view_only)
             break
-        elif event is not None and not view_only:  # Clicking any unit button opens the unit editor.
+        elif 'MouseWheel' not in event and event is not None and not view_only:
+            # Clicking any unit button opens the unit editor.
+            close = False
             for unit in sides[1] + sides[2]:
                 if unit.name == event:
-                    oob_edit(sides, stats, unit, default=default)
+                    while not close:
+                        close, default = oob_edit(sides, stats, unit, default=default)
                     break
+            break
     window.close()
+    return cont, default, clone
 
 
 def oob_edit(sides, stats, unit, default=False):
@@ -690,17 +712,17 @@ def oob_edit(sides, stats, unit, default=False):
     layout.append([sg.Menu(menu_def)])
     window = sg.Window(f'Battle System {stats[3]}', layout, resizable=True,
                        size=(600, 600), return_keyboard_events=True)
-
+    close = False
     while True:
         event, values = window.read()
         if event in (None, "Exit"):  # User closes window or presses Exit button.
             exit()
         elif event == "Close":  # User presses Close button to get back to units.
-            return
+            close = True
+            break
         elif event == "Switch default editing":  # Switches default mode.
-            window.close()
             default = not default
-            oob_edit(sides, stats, unit, default=default)
+            break
         elif event == "Change":  # Changes unit type completely.
             for vehicle in vehicles_internal:
                 if values["type"] == vehicles_internal[vehicle]:
@@ -709,20 +731,19 @@ def oob_edit(sides, stats, unit, default=False):
                     unit.state = [vehicles[unit.type[0]][unit.type[1]][2]]  # How much alive asset is
                     unit.state.append(unit.set_state())  # Name of unit state
                     unit.systems = unit.default_eq(unit)
-                    window.close()
-                    oob_edit(sides, stats, unit, default)
+                    break
+            break
         elif event == "eyear":  # Modify unit year.
             if unit.year != values["uyear"] and user_input(values["uyear"], minimum=stats[4][0], maximum=stats[4][1]):
-                unit.year = values["uyear"]  # Checks and assigns new unit year.
-                window.close()
-                oob_edit(sides, stats, unit, default)
+                unit.year = values["uyear"]  # Checks and a
+                # assigns new unit year.
+                break
         elif event == "add":  # Add weapons or modify them with 0.
             for _ in eq_systems[unit.type[0]]:
                 if values["wp"] == eq_systems[unit.type[0]][_][0]:
                     unit.add_system(_, values["amount"], default)
                     break
-            window.close()
-            oob_edit(sides, stats, unit, default)
+            break
         elif event == "Units":  # Show unit tab view only.
             oob_units(sides, stats, view_only=True)
         elif event == "wmodify":  # Add weapons or modify them with 0.
@@ -732,9 +753,10 @@ def oob_edit(sides, stats, unit, default=False):
                             unit.systems[unit.define_system(value, True)] != values[value]:
                         unit.add_system(system, values[value], default)
                         break
-            window.close()
-            oob_edit(sides, stats, unit, default)
+            break
+
     window.close()
+    return close, default
 
 
 # noinspection SpellCheckingInspection
@@ -829,7 +851,19 @@ eq_systems = {
 state = ["KIA", "Heavily Damaged", "Major Damage taken", "Damaged", "Slightly damaged", "Scratched",
          "In nominal condition", "Worried", "New", "Withdrawing", "unknown"]
 
-return_type = lambda x: "Surface Units" if x == 1 else ("Naval Units" if x == 3 else "Aerial Units")
+
+def return_type(category):
+    """
+
+    @param category:
+    @return:
+    """
+    if category == 1:
+        return "Surface Units"
+    elif category == 2:
+        return "Aerial Units"
+    elif category == 3:
+        return "Naval Units"
 
 
 def category(unit):
