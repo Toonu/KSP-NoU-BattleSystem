@@ -453,7 +453,14 @@
       <option name="project" value="LOCAL" />
       <updated>1581156206857</updated>
     </task>
-    <option name="localTasksCounter" value="39" />
+    <task id="LOCAL-00039" summary="Battle system 1.0.0&#10;&#10;UI Based rewrite&#10;Added countermeasure and hit function attack.">
+      <created>1581192819085</created>
+      <option name="number" value="00039" />
+      <option name="presentableId" value="LOCAL-00039" />
+      <option name="project" value="LOCAL" />
+      <updated>1581192819085</updated>
+    </task>
+    <option name="localTasksCounter" value="40" />
     <servers />
   </component>
   <component name="Vcs.Log.Tabs.Properties">
@@ -492,7 +499,8 @@
     <MESSAGE value="Battle system 1.0.0&#10;&#10;UI Based rewrite&#10;Update on search function and SEAD mechanic." />
     <MESSAGE value="Battle system 1.0.0&#10;&#10;UI Based rewrite&#10;Started fixing window issues." />
     <MESSAGE value="Battle system 1.0.0&#10;&#10;UI Based rewrite&#10;Window bugs fixed. Started attacking function. Search and distanc functions done changing unit states." />
-    <option name="LAST_COMMIT_MESSAGE" value="Battle system 1.0.0&#10;&#10;UI Based rewrite&#10;Window bugs fixed. Started attacking function. Search and distanc functions done changing unit states." />
+    <MESSAGE value="Battle system 1.0.0&#10;&#10;UI Based rewrite&#10;Added countermeasure and hit function attack." />
+    <option name="LAST_COMMIT_MESSAGE" value="Battle system 1.0.0&#10;&#10;UI Based rewrite&#10;Added countermeasure and hit function attack." />
     <option name="OPTIMIZE_IMPORTS_BEFORE_PROJECT_COMMIT" value="true" />
     <option name="REFORMAT_BEFORE_PROJECT_COMMIT" value="true" />
     <option name="REARRANGE_BEFORE_PROJECT_COMMIT" value="true" />
@@ -514,10 +522,10 @@
       <screen x="0" y="0" width="1920" height="1040" />
     </state>
     <state x="715" y="224" key="#xdebugger.evaluate/0.0.1920.1040@0.0.1920.1040" timestamp="1578830952430" />
-    <state x="614" y="181" width="692" height="743" key="CommitChangelistDialog2" timestamp="1581156205915">
+    <state x="614" y="181" width="692" height="743" key="CommitChangelistDialog2" timestamp="1581192817533">
       <screen x="0" y="0" width="1920" height="1040" />
     </state>
-    <state x="614" y="181" width="692" height="743" key="CommitChangelistDialog2/0.0.1920.1040@0.0.1920.1040" timestamp="1581156205915" />
+    <state x="614" y="181" width="692" height="743" key="CommitChangelistDialog2/0.0.1920.1040@0.0.1920.1040" timestamp="1581192817533" />
     <state width="1675" height="466" key="DebuggerActiveHint" timestamp="1580940162744">
       <screen x="0" y="0" width="1920" height="1040" />
     </state>
@@ -575,10 +583,10 @@
     </state>
     <state x="535" y="209" key="SettingsEditor/0.0.1920.1040@0.0.1920.1040" timestamp="1581178969317" />
     <state x="192" y="23" key="SettingsEditor/0.23.1366.681@0.23.1366.681" timestamp="1580907344274" />
-    <state x="552" y="254" key="Vcs.Push.Dialog.v2" timestamp="1581156208836">
+    <state x="552" y="254" key="Vcs.Push.Dialog.v2" timestamp="1581192899444">
       <screen x="0" y="0" width="1920" height="1040" />
     </state>
-    <state x="552" y="254" key="Vcs.Push.Dialog.v2/0.0.1920.1040@0.0.1920.1040" timestamp="1581156208836" />
+    <state x="552" y="254" key="Vcs.Push.Dialog.v2/0.0.1920.1040@0.0.1920.1040" timestamp="1581192899444" />
     <state x="661" y="345" key="com.intellij.ide.util.TipDialog" timestamp="1581153647743">
       <screen x="0" y="0" width="1920" height="1040" />
     </state>

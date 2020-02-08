@@ -151,8 +151,8 @@ class Asset:
         Modify unit object distance, turn number, withdraw and pursue moves and adds it to the database when withdrawn
         or destroyed including its weapons.
         @param sides: Two sides of unit objects.
-        @param stats: General Database of lists and main informations used through the program.
-        @return: Returns modified stats updated with new informations.
+        @param stats: General Database of lists and main information used through the program.
+        @return: Returns modified stats updated with new information
         """
         if self.state[0] <= 0:
             stats[6][0].append(self)
@@ -310,7 +310,7 @@ def final(sides, stats):
     """
     Prints out results of the battle from stats and sides lists.
     @param sides: Two sides of unit objects.
-    @param stats: General Database of lists and main informations used through the program.
+    @param stats: General Database of lists and main information used through the program.
     """
     print("\nWinning Side\n")
     for unit in sides[1] + sides[2]:
@@ -898,17 +898,17 @@ state = ["KIA", "Heavily Damaged", "Major Damage taken", "Damaged", "Slightly da
          "In nominal condition", "Worried", "New", "Withdrawing", "unknown"]
 
 
-def return_type(category):
+def return_type(cat):
     """
 
-    @param category:
+    @param cat:
     @return:
     """
-    if category == 1:
+    if cat == 1:
         return "Surface Units"
-    elif category == 2:
+    elif cat == 2:
         return "Aerial Units"
-    elif category == 3:
+    elif cat == 3:
         return "Naval Units"
 
 
