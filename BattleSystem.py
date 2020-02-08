@@ -130,8 +130,8 @@ class Asset:
                 max_dmg = 0
                 for weapon in self.systems:
                     if (target.type[0] in eq_systems[self.type[0]][weapon][2] or (target.has_radar and sead)) and \
+                            dist_calc(self.distance, target.distance) <= eq_systems[self.type[0]][weapon][3] and \
                             eq_systems[self.type[0]][weapon][1] > max_dmg:
-                        # dist_calc(self.distance, target.distance) <= eq_systems[self.type[0]][weapon][3] and
                         # Successful weapon <=> target <=> distance lock | OR | SEAD mechanics + max dmg weapon chosen.
                         max_dmg = eq_systems[self.type[0]][weapon][1]
 
@@ -163,13 +163,13 @@ class Asset:
                     stats[6][2][self.side[0]][self.define_system(system)] = self.systems[system]
             sides[self.side[0]].remove(self)
             return
-        elif not self.is_withdrawing and self.state[0] < vehicles[self.type[0]][self.type[1]][2] \
-                and random.randint(0, 100) > 50:
+        elif not self.is_withdrawing and self.state[0] < vehicles[self.type[0]][self.type[1]][2] / 2:
             self.is_withdrawing = True
         elif self.is_withdrawing and (self.distance < -9 or self.distance > 9):
             stats[6][1].append(self)
             sides[self.side[0]].remove(self)
             return
+        self.state[1] = self.set_state()
 
     def distanc(self, sides):
         """
@@ -184,20 +184,55 @@ class Asset:
                 pursue = False
                 break
 
-        if pursue and -10 < self.distance < 10:  # Pursue
-            self.distance -= 2 * self.side[1]
-        elif self.is_withdrawing:  # Withdraw
+        if self.is_withdrawing:  # Withdraw
             self.distance += 2 * self.side[1]
+        elif pursue and -10 < self.distance < 10:  # Pursue
+            self.distance -= 2 * self.side[1]
         elif self.distance != 0 and -10 < self.distance < 10:  # Normal
             self.distance -= 1 * self.side[1]
 
-    def attack(self, aggressor, weapon):
+    def attack(self, aggressor, weapon, stats):
         """
 
+        @param stats:
         @param aggressor:
         @param weapon:
         """
-        self.state[0] -= random.randint(0, 2)
+
+        if random.randint(0, 40) + aggressor.year - 1945 > 50:
+            hit_probability = random.randint(0, 100)
+
+            for cm in self.systems.copy():
+                used = False
+                if (8 in eq_systems[self.type[0]][cm][2] or 9 in eq_systems[self.type[0]][cm][2]) and \
+                        hit_probability > 30:
+                    try:
+                        for item in eq_systems[self.type[0]][cm][2][0]:
+                            if item in eq_systems[self.type[0]][weapon][5]:
+                                hit_probability -= eq_systems[self.type[0]][cm][1] * (10 - random.randint(0, 7))
+                                used = True
+                    except TypeError:
+                        if eq_systems[self.type[0]][cm][2][0] in eq_systems[self.type[0]][weapon][5]:
+                            hit_probability -= eq_systems[self.type[0]][cm][1] * (10 - random.randint(0, 7))
+                            used = True
+                    finally:
+                        if used:
+                            self.systems[cm] -= 1
+                            if self.systems[cm] < 1:
+                                self.systems.pop(cm)
+
+            if 80 > hit_probability > 30:
+                self.state[0] -= eq_systems[aggressor.type[0]][weapon][1] + random.randint(-1, 1)
+            else:
+                self.state[0] -= eq_systems[aggressor.type[0]][weapon][1] + random.randint(0, 3)
+        # Adding fired system into database and removing from unit.
+        try:
+            stats[6][2][self.side[0]][self.define_system(weapon)] += 1
+        except KeyError:
+            stats[6][2][self.side[0]][self.define_system(weapon)] = 1
+        aggressor.systems[weapon] -= 1
+        if aggressor.systems[weapon] < 1:
+            aggressor.systems.pop(weapon)
 
 
 def battle_turn(sides, stats, dmg=False):
@@ -229,7 +264,7 @@ def battle_turn(sides, stats, dmg=False):
     col = unit_listing((sides[1] + sides[2]).copy(), [])
 
     layout.append([sg.T(f"Battle Simulator - Turn: {stats[5]}")])
-    layout.append([sg.Col(col)])
+    layout.append([sg.Col(col, scrollable=True, size=(580, 500))])
     layout.append([sg.B("Next Turn", size=(20, 5), button_color=("#000000", "#dbc867"))])
     window = sg.Window(f'Battle System {stats[3]}', layout, resizable=True,
                        size=(600, 600), return_keyboard_events=True)
@@ -244,12 +279,13 @@ def battle_turn(sides, stats, dmg=False):
                 targets = unit.search(sides)
                 for i in range(1, 4):
                     try:
-                        targets["attacking"][i].attack(unit, targets["weapon"][i])
+                        targets["attacking"][i].attack(unit, targets["weapon"][i], stats)
                         targets["attacking"][i].status(sides, stats)
                     except KeyError:
                         pass
             for unit in sides[1] + sides[2]:  # Moving units per their status
                 unit.distanc(sides)
+                unit.status(sides, stats)
             stats[5] += 1  # Adding turn +1
             break
         elif event == "Units":  # Show unit tab view only.
@@ -261,7 +297,7 @@ def battle_turn(sides, stats, dmg=False):
             name = "asset" + event.replace("Damage-", "")  # Getting assetx_y name from button key (event).
             for unit in sides[1] + sides[2]:
                 if unit.name == name:
-                    unit.state[0] -= 4
+                    unit.state[0] -= 3
                     unit.state[1] = unit.set_state()
                     dmg = True
                     break
@@ -300,7 +336,13 @@ def final(sides, stats):
     print("\nLost or Fired Weapons Side B")
     try:
         for system, value in stats[6][2][2].items():
-            print(f"{system} {value}")
+            if len(str(value)) <= 1:  # Align the values with spaces for better look.
+                value = str(value) + "   "
+            elif len(str(value)) <= 2:
+                value = str(value) + "  "
+            elif len(str(value)) <= 3:
+                value = str(value) + " "
+            print(f"{value} | {system} ")
     except IndexError:
         pass
 
@@ -759,6 +801,7 @@ def oob_edit(sides, stats, unit, default=False):
     return close, default
 
 
+# Class, subclass, (Name, (systems), hp, def_sys ammo)
 # noinspection SpellCheckingInspection
 vehicles = {
     1: {0: ("MBT", (90, 1, 2, 3, 4, 5, 6, 7, 13, 14), 8, 45),
@@ -781,71 +824,74 @@ vehicles = {
         6: ("Light Carrier", (96, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11), 16, 40),
         7: ("Aircraft Carrier", (97, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11), 20, 80)}
 }
+
 # noinspection SpellCheckingInspection
 vehicles_internal = {0: "MBT", 1: "AFV", 2: "IFV", 3: "APC", 4: "SAM", 5: "MLB", 6: "Small Multirole Aircraft",
                      7: "Medium Multirole Aircraft", 8: "Large Multirole Aircraft", 9: "Large Heavy Aircraft",
                      10: "Very Large Heavy Aircraft", 11: "Corvette", 12: "Frigate", 13: "Destroyer", 14: "Cruiser",
                      15: "Battlecruiser", 16: "Battleship", 17: "Light Carrier", 18: "Aircraft Carrier"}
+
+# Class, subclass, (Name, dmg, targets, max range, min range, countermeasures against the system)
 # noinspection SpellCheckingInspection
 eq_systems = {
-    1: {1: ("Smoke (CM)", 2, [9], 0, 0),
-        2: ("SK-APS (SCM)", 3, [8], 0, 0),
-        3: ("HK-APS (CM)", 4, [9], 0, 0),
-        4: ("ERA (CM)", 6, [9], 0, 0),
-        5: ("NxRA (CM)", 8, [9], 0, 0),
-        6: ("Applique (CM)", 3, [9], 0, 0),
-        7: ("ATGM", 4, (1, 3), 3, 0),
-        8: ("SR-SAM", 3, [2], 3, 0),
-        9: ("MR-SAM", 3, [2], 6, 0),
-        10: ("LR-SAM", 3, [2], 10, 3),
-        11: ("MR-AShM", 6, [3], 4, 0),
-        12: ("LR-AShM", 5, [3], 6, 0),
-        13: ("Heavy MG Turret", 1, [2], 1, 0),
-        14: ("Autocannon Turret", 2, [2], 1, 0),
-        90: ("Tank gun", 5, [1], 2, 0),
-        91: ("Autocannon", 2, (1, 2), 2, 0),
-        92: ("Heavy MG", 1, (1, 2), 2, 0),
-        93: ("Light MG", 1, [1], 1, 0),
-        94: ("Crew Handheld Firearms", 1, [1], 1, 0),
-        95: ("Crew Handheld Firearms", 1, [1], 1, 0)},
-    2: {1: ("Flares (CM)", 2, [9], 0, 0),
-        2: ("Chaff (CM)", 2, [9], 0, 0),
-        3: ("ECM (SCM)", 2, [8], 0, 0),
-        4: ("EWS (SCM)", 3, [8], 0, 0),
-        5: ("SRAAM", 4, [2], 2, 0),
-        6: ("MRAAM", 4, [2], 4, 0),
-        7: ("LRAAM", 4, [2], 12, 3),
-        8: ("AGM", 4, [1], 3, 0),
-        9: ("MR-AShM", 6, [3], 4, 0),
-        10: ("SEAD", 5, [6], 4, 0),
-        11: ("Cruise Missile", 3, [1], 5, 0),
-        12: ("Bomb", 2, [1], 1, 0),
-        13: ("GBU", 4, [1], 1, 0),
-        14: ("Drop Tank", 0, [0], 0, 0),
-        90: ("Autocannon", 1, (1, 2), 1, 0),
-        91: ("Autocannon", 2, (1, 2), 1, 0),
-        92: ("Autocannon", 2, (1, 2), 1, 0),
-        93: ("Defense Turrets", 1, [2], 1, 0),
-        94: ("Defense Turrets", 1, [2], 1, 0)},
-    3: {1: ("CIWS (SCM)", 1, (2, 8), 1, 0),
-        2: ("DEW (SCM)", 2, (2, 8), 1, 0),
-        3: ("ECM (SCM)", 1, [8], 0, 0),
-        4: ("Smoke (CM)", 2, [9], 0, 0),
-        5: ("Chaff (CM)", 2, [9], 0, 0),
-        6: ("SR-SAM (CM)", 3, (2, 9), 3, 0),
-        7: ("MR-SAM (CM)", 3, (2, 9), 6, 0),
-        8: ("LR-SAM", 3, [2], 10, 3),
-        9: ("MR-AShM", 6, [3], 4, 0),
-        10: ("LR-AShM", 8, [3], 6, 0),
-        11: ("Cruise Missile", 3, [1], 5, 0),
-        90: ("Main Battery", 1, (1, 2, 3), 1, 0),
-        91: ("Main Battery", 1, (1, 2, 3), 1, 0),
-        92: ("Main Battery", 1, (1, 2, 3), 1, 0),
-        93: ("Main Battery", 1, (1, 2, 3), 2, 0),
-        94: ("Main Battery", 1, (1, 2, 3), 3, 0),
-        95: ("Main Battery", 1, (1, 2, 3), 4, 0),
-        96: ("Auxiliary Weapons", 1, (2, 3), 1, 0),
-        97: ("Auxiliary Weapons", 1, (2, 3), 1, 0)}
+    1: {1: ("Smoke (CM)", 2, [9], 0, 0, [0]),
+        2: ("SK-APS (SCM)", 3, [8], 0, 0, [0]),
+        3: ("HK-APS (CM)", 4, [9], 0, 0, [0]),
+        4: ("ERA (CM)", 6, [9], 0, 0, [0]),
+        5: ("NxRA (CM)", 8, [9], 0, 0, [0]),
+        6: ("Applique (CM)", 3, [9], 0, 0, [0]),
+        7: ("ATGM", 4, (1, 3), 4, 0, [8, 9]),
+        8: ("SR-SAM", 3, [2], 4, 0, [8, 9]),
+        9: ("MR-SAM", 3, [2], 6, 0, [8, 9]),
+        10: ("LR-SAM", 3, [2], 10, 3, [8, 9]),
+        11: ("MR-AShM", 6, [3], 4, 0, [8, 9]),
+        12: ("LR-AShM", 5, [3], 6, 0, [8, 9]),
+        13: ("Heavy MG Turret", 1, [2], 1, 0, [9]),
+        14: ("Autocannon Turret", 2, [2], 1, 0, [9]),
+        90: ("Tank gun", 5, [1], 2, 0, [9]),
+        91: ("Autocannon", 2, (1, 2), 2, 0, [9]),
+        92: ("Heavy MG", 1, (1, 2), 2, 0, [9]),
+        93: ("Light MG", 1, [1], 1, 0, [9]),
+        94: ("Crew Handheld Firearms", 1, [1], 1, 0, [9]),
+        95: ("Crew Handheld Firearms", 1, [1], 1, 0, [9])},
+    2: {1: ("Flares (CM)", 2, [9], 0, 0, [0]),
+        2: ("Chaff (CM)", 2, [9], 0, 0, [0]),
+        3: ("ECM (SCM)", 2, [8], 0, 0, [0]),
+        4: ("EWS (SCM)", 3, [8], 0, 0, [0]),
+        5: ("SRAAM", 4, [2], 2, 0, [8, 9]),
+        6: ("MRAAM", 4, [2], 4, 0, [8, 9]),
+        7: ("LRAAM", 4, [2], 12, 3, [8, 9]),
+        8: ("AGM", 4, [1], 2, 0, [9]),
+        9: ("MR-AShM", 6, [3], 4, 0, [8, 9]),
+        10: ("SEAD", 5, [6], 4, 0, [8, 9]),
+        11: ("Cruise Missile", 4, [1], 5, 0, [9]),
+        12: ("Bomb", 2, [1], 1, 0, [0]),
+        13: ("GBU", 4, [1], 1, 0, [0]),
+        14: ("Drop Tank", 0, [0], 0, 0, [0]),
+        90: ("Autocannon", 1, (1, 2), 1, 0, [0]),
+        91: ("Autocannon", 2, (1, 2), 1, 0, [0]),
+        92: ("Autocannon", 2, (1, 2), 1, 0, [0]),
+        93: ("Defense Turrets", 1, [2], 1, 0, [0]),
+        94: ("Defense Turrets", 1, [2], 1, 0, [0])},
+    3: {1: ("CIWS (SCM)", 1, (2, 8), 1, 0, [0]),
+        2: ("DEW (SCM)", 2, (2, 8), 1, 0, [0]),
+        3: ("ECM (SCM)", 1, [8], 0, 0, [0]),
+        4: ("Smoke (CM)", 2, [9], 0, 0, [0]),
+        5: ("Chaff (CM)", 2, [9], 0, 0, [0]),
+        6: ("SR-SAM (CM)", 3, (2, 9), 4, 0, [8, 9]),
+        7: ("MR-SAM (CM)", 3, (2, 9), 6, 0, [8, 9]),
+        8: ("LR-SAM", 3, [2], 10, 3, [8, 9]),
+        9: ("MR-AShM", 6, [3], 4, 0, [8, 9]),
+        10: ("LR-AShM", 8, [3], 6, 0, [8, 9]),
+        11: ("Cruise Missile", 3, [1], 5, 0, [9]),
+        90: ("Main Battery", 1, (1, 2, 3), 1, 0, [9]),
+        91: ("Main Battery", 1, (1, 2, 3), 1, 0, [9]),
+        92: ("Main Battery", 1, (1, 2, 3), 1, 0, [9]),
+        93: ("Main Battery", 1, (1, 2, 3), 2, 0, [9]),
+        94: ("Main Battery", 1, (1, 2, 3), 4, 0, [9]),
+        95: ("Main Battery", 1, (1, 2, 3), 4, 0, [9]),
+        96: ("Auxiliary Weapons", 1, (2, 3), 1, 0, [9]),
+        97: ("Auxiliary Weapons", 1, (2, 3), 1, 0, [9])}
 }
 # noinspection SpellCheckingInspection
 state = ["KIA", "Heavily Damaged", "Major Damage taken", "Damaged", "Slightly damaged", "Scratched",
@@ -931,11 +977,15 @@ def unit_listing(sides, col):
     @return:
     """
     if len(sides):
+        once = False
         for unit in sides.copy():  # Listing of units.
+            if unit.side[0] == 2 and not once:
+                col.append([sg.T(f"\n\nSide 2:")])
+                once = True
             systems = "Eq: "
             counter = 0
-            col.append([sg.T(f"{unit.name} | {unit.distance} | {unit.state[0]} | ", key=f"{cut(unit)} ",
-                             right_click_menu=['&Right', [f"Damage-{cut(unit)}"]])])
+            col.append([sg.T(f"{unit.name} | D: {unit.distance} | H: {unit.state[0]} | W: {unit.is_withdrawing}",
+                             key=f"{cut(unit)} ", right_click_menu=['&Right', [f"Damage-{cut(unit)}"]])])
             for item in unit.systems:
                 counter += 1
                 if counter <= 6:  # Overflow prevention adding another row with \n.
