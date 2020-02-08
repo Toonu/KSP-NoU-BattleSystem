@@ -3,7 +3,6 @@
   <component name="ChangeListManager">
     <list default="true" id="47b19ab7-b610-4490-9b15-db8ef449b338" name="Default Changelist" comment="">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/BattleSystem.py" beforeDir="false" afterPath="$PROJECT_DIR$/BattleSystem.py" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -460,7 +459,14 @@
       <option name="project" value="LOCAL" />
       <updated>1581192819085</updated>
     </task>
-    <option name="localTasksCounter" value="40" />
+    <task id="LOCAL-00040" summary="Battle system 1.0.0&#10;&#10;UI Based rewrite&#10;Added countermeasure and hit function attack.">
+      <created>1581193083500</created>
+      <option name="number" value="00040" />
+      <option name="presentableId" value="LOCAL-00040" />
+      <option name="project" value="LOCAL" />
+      <updated>1581193083500</updated>
+    </task>
+    <option name="localTasksCounter" value="41" />
     <servers />
   </component>
   <component name="Vcs.Log.Tabs.Properties">
@@ -522,10 +528,10 @@
       <screen x="0" y="0" width="1920" height="1040" />
     </state>
     <state x="715" y="224" key="#xdebugger.evaluate/0.0.1920.1040@0.0.1920.1040" timestamp="1578830952430" />
-    <state x="614" y="181" width="692" height="743" key="CommitChangelistDialog2" timestamp="1581192817533">
+    <state x="614" y="181" width="692" height="743" key="CommitChangelistDialog2" timestamp="1581193082559">
       <screen x="0" y="0" width="1920" height="1040" />
     </state>
-    <state x="614" y="181" width="692" height="743" key="CommitChangelistDialog2/0.0.1920.1040@0.0.1920.1040" timestamp="1581192817533" />
+    <state x="614" y="181" width="692" height="743" key="CommitChangelistDialog2/0.0.1920.1040@0.0.1920.1040" timestamp="1581193082559" />
     <state width="1675" height="466" key="DebuggerActiveHint" timestamp="1580940162744">
       <screen x="0" y="0" width="1920" height="1040" />
     </state>
@@ -583,10 +589,10 @@
     </state>
     <state x="535" y="209" key="SettingsEditor/0.0.1920.1040@0.0.1920.1040" timestamp="1581178969317" />
     <state x="192" y="23" key="SettingsEditor/0.23.1366.681@0.23.1366.681" timestamp="1580907344274" />
-    <state x="552" y="254" key="Vcs.Push.Dialog.v2" timestamp="1581192899444">
+    <state x="552" y="254" key="Vcs.Push.Dialog.v2" timestamp="1581193085043">
       <screen x="0" y="0" width="1920" height="1040" />
     </state>
-    <state x="552" y="254" key="Vcs.Push.Dialog.v2/0.0.1920.1040@0.0.1920.1040" timestamp="1581192899444" />
+    <state x="552" y="254" key="Vcs.Push.Dialog.v2/0.0.1920.1040@0.0.1920.1040" timestamp="1581193085043" />
     <state x="661" y="345" key="com.intellij.ide.util.TipDialog" timestamp="1581153647743">
       <screen x="0" y="0" width="1920" height="1040" />
     </state>
@@ -606,13 +612,6 @@
   </component>
   <component name="XDebuggerManager">
     <breakpoint-manager>
-      <breakpoints>
-        <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
-          <url>file://$PROJECT_DIR$/BattleSystem.py</url>
-          <line>208</line>
-          <option name="timeStamp" value="13" />
-        </line-breakpoint>
-      </breakpoints>
       <default-breakpoints>
         <breakpoint type="python-exception">
           <properties notifyOnTerminate="true" exception="BaseException">
